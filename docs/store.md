@@ -42,3 +42,5 @@ learn-more:
   - Result
 * Min roll is red, max roll is green
 * The Reroll button will send the exact command used again, it can be used by all players but, by the way it's done, will stay public or private roll
+* Rolls History is **not** saved in any local or remote storage, leaving page will empty the history locally
+* Todo: fancier hidden rolls?
