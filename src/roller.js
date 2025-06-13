@@ -14,6 +14,12 @@ export function setupDiceRoller(playerName) {
     const command = value.trim().startsWith("/gr") ? value : "/gr " + value;
     await submitInput(command);
   });
+  
+  document.getElementById("rollButton").addEventListener("click", async () => {
+    const value = document.getElementById("inputField").value;
+    const command = value.trim().startsWith("/r") ? value : "/r " + value;
+    await submitInput(command);
+  });
 
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault(); // Prevent form from refreshing the page

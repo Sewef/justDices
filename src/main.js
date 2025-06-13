@@ -8,7 +8,8 @@ document.querySelector('#app').innerHTML = `
     <div class="input-group">
       <input type="text" id="inputField" placeholder="1d8+6..." />
       <button type="button" id="hiddenRollButton" title="Hidden roll">🙈</button>
-      <button type="submit" id="submitButton" title="Roll it">⚔️</button>
+      <button type="button" id="rollButton" title="Roll it">⚔️</button>
+      <button type="submit" style="display: none;"></button>
     </div>
   </form>
   <div id="logContainer">
