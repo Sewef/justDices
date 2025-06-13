@@ -14,13 +14,10 @@ document.querySelector('#app').innerHTML = `
     <input type="submit" value=">">
   </form>
   <div id="logContainer">
+    <h3>Historique des jets</h3>
     <div id="logCards">
     <div>
   </div>
-
-  <div id="historyContainer">
-  <h3>Historique des jets</h3>
-  <ul id="rollHistory"></ul>
 </div>
 
 `

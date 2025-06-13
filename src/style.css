@@ -99,6 +99,33 @@ h1 {
   font-weight: bold;
 }
 
+.log-entry {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.log-text {
+  flex-grow: 1;
+}
+
+.reroll-button {
+  padding: 4px 8px;
+  font-size: 2em;
+  /*background-color: #e0e0e0;*/
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+
+}
+
+.reroll-button:hover {
+  background-color: #cfcfcf;
+}
+
+
 @keyframes rollPop {
   0% { transform: scale(0); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }

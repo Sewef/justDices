@@ -51,10 +51,30 @@ function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
   newEntry.className = "card";
-  newEntry.innerHTML = `<span class="log user">${user}:</span> ${text.expression}<br>
-  <span class="log result">${text.rolls}</span> = <span class="log total">${text.total}</span>`;
+
+  const originalCommand = text.expression.split(" (")[0];
+
+  newEntry.innerHTML = `
+    <div class="log-entry">
+      <div class="log-text">
+        <span class="log user">${user}:</span> ${text.expression}<br>
+        <span class="log result">${text.rolls}</span> = 
+        <span class="log total">${text.total}</span>
+      </div>
+      <button class="reroll-button" data-command="${originalCommand}">🎲</button>
+    </div>
+  `;
+
   logCards.insertBefore(newEntry, logCards.firstChild);
+
+  newEntry.querySelector(".reroll-button").addEventListener("click", (e) => {
+    const command = e.target.getAttribute("data-command");
+    if (command) {
+      submitInput(command);
+    }
+  });
 }
+
 
 function broadcastLogEntry(user, text) {
   return;
