@@ -11,14 +11,18 @@ export function setupDiceRoller(playerName) {
   // Setup Submit event
   document.getElementById("hiddenRollButton").addEventListener("click", async () => {
     const value = document.getElementById("inputField").value;
-    await submitInput("/gr " + value);
+    const command = value.trim().startsWith("/gr") ? value : "/gr " + value;
+    await submitInput(command);
   });
-
 
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault(); // Prevent form from refreshing the page
     const value = document.getElementById("inputField").value;
-    await submitInput("/r " + value);
+    let command = value.trim();
+    if (!command.startsWith("/gr") && !command.startsWith("/r")) {
+      command = "/r " + command;
+    }
+    await submitInput(command);
   });
 
   OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
