@@ -176,10 +176,9 @@ button:hover {
 }
 
 .public-roll {
-  /*border-left: 4px solid #bb0000; */
 }
+
 .hidden-roll {
-  border-left: 8px solid;
   border-color: #8f8f8f;
   color: #8f8f8f;
 }

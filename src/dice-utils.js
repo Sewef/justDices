@@ -25,9 +25,9 @@ export async function parseInput(text) {
     // Validation détaillée : découpage en tokens par + ou -
     const tokens = rollExpression.split(/[\+\-]/).map(t => t.trim());
 
-    const validTokenRegex = /^(\d*d\d+|db\d+|\d*dF(udge)?|\d+)$/i;
+    const validTokenRegex = /^(\d*d\d+|\d*db\d+|\d*dF(udge)?|\d+)$/i;
     // - \d*d\d+ : dés classiques (ex: d6, 3d20)
-    // - db\d+ : dés spéciaux de bonus (ex: db14)
+    // - \d*db\d+ : dés spéciaux de bonus (ex: db14)
     // - \d*dF(udge)? : dés Fudge (ex: dF, 4dF, 2dFudge)
     // - \d+ : constantes (ex: 5)
 
@@ -51,7 +51,7 @@ export async function rollExpression(text) {
     let expression = text.toLowerCase().replaceAll(" ", "").trim();
 
     // Expand multiplier-based keywords like "2db4"
-    expression = expression.replace(/(\d+)db(\d+)/g, (match, multiplier, dbLevel) => {
+    expression = expression.replace(/(\d+)db(\d+)/g, (_, multiplier, dbLevel) => {
         return Array.from({ length: parseInt(multiplier) }, () => `db${dbLevel}`).join(' + ');
     });
 
@@ -94,21 +94,37 @@ export async function rollExpression(text) {
     // console.log(`Final roll expression: ${expression}`);
 
     const rolls = [];
-    const rollParts = expression.split('+').map(part => part.trim());
-    for (const part of rollParts) {
+    // Split expression into parts, keeping the operators
+    const rollParts = [];
+    let regex = /([+-]?[^+-]+)/g;
+    let match;
+    while ((match = regex.exec(expression)) !== null) {
+        rollParts.push(match[0].trim());
+    }
+    for (const partWithOp of rollParts) {
+        let operator = 1;
+        let part = partWithOp;
+        if (part.startsWith('+')) {
+            part = part.slice(1);
+        } else if (part.startsWith('-')) {
+            operator = -1;
+            part = part.slice(1);
+        }
+        part = part.trim();
+
         // 🎲 Gestion des dés Fudge
         if (part.match(/^(\d*)dF(udge)?$/i)) {
-            const match = part.match(/^(\d*)dF(udge)?$/i);
-            const numDice = parseInt(match[1]) || 4; // par défaut 4 dés Fudge
+            const matchFudge = part.match(/^(\d*)dF(udge)?$/i);
+            const numDice = parseInt(matchFudge[1]) || 4; // par défaut 4 dés Fudge
             const rollResults = [];
 
             for (let i = 0; i < numDice; i++) {
-                const val = [-1, 0, 1][Math.floor(Math.random() * 3)];
+                const val = [-1, 0, 1][Math.floor(Math.random() * 3)] * operator;
                 rollResults.push({ value: val, type: "fudge" });
             }
 
             rolls.push({
-                expression: part,
+                expression: (operator === -1 ? '-' : '') + part,
                 results: rollResults,
                 total: rollResults.reduce((sum, r) => sum + r.value, 0)
             });
@@ -117,36 +133,31 @@ export async function rollExpression(text) {
         }
 
         // 🎲 Gestion classique des dés (NdX)
-        const match = part.match(/(\d*)d(\d+)/);
-        if (match) {
-            const numDice = parseInt(match[1]) || 1;
-            const dieSize = parseInt(match[2]);
+        const matchDice = part.match(/(\d*)d(\d+)/);
+        if (matchDice) {
+            const numDice = parseInt(matchDice[1]) || 1;
+            const dieSize = parseInt(matchDice[2]);
             const rollResults = [];
 
             for (let i = 0; i < numDice; i++) {
-                const roll = Math.floor(Math.random() * dieSize) + 1;
+                const roll = (Math.floor(Math.random() * dieSize) + 1) * operator;
                 let type = "normal";
-                if (roll === 1) type = "min";
-                else if (roll === dieSize) type = "max";
+                if (Math.abs(roll) === 1) type = "min";
+                else if (Math.abs(roll) === dieSize) type = "max";
                 rollResults.push({ value: roll, type });
             }
 
             rolls.push({
-                expression: part,
+                expression: (operator === -1 ? '-' : '') + part,
                 results: rollResults,
                 total: rollResults.reduce((sum, roll) => sum + roll.value, 0)
             });
         } else {
-            // 🎯 Constantes et soustractions
-            const subParts = part.split('-').map(p => p.trim());
-            let total = parseInt(subParts[0]);
-
-            for (let i = 1; i < subParts.length; i++) {
-                total -= parseInt(subParts[i]);
-            }
+            // 🎯 Constantes
+            let total = (parseInt(part) || 0) * operator;
 
             rolls.push({
-                expression: part,
+                expression: (operator === -1 ? '-' : '') + part,
                 results: [{ value: total, type: "normal" }],
                 total: total
             });
