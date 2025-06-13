@@ -34,12 +34,12 @@ async function submitInput(text) {
   // Roll the dice using the parsed expression
   const rollResult = await rollExpression(parsedInput.rollExpression);
 
-
-  let resultStr = [
-    text,
-    rollResult
-  ];
-  // For now, just log the input
+  const resultStr = {
+    expression: `${text} (${rollResult.expression})`,
+    rolls: rollResult.rolls,
+    total: rollResult.total
+  };
+  
   addLogEntry(localConfig.playerName, resultStr);
   broadcastLogEntry(localConfig.playerName, resultStr);
 }
@@ -61,7 +61,6 @@ async function parseInput(text) {
   else {
     rollExpression = text;
   }
-  // TODO: Add /db command handling
 
   if (!rollExpression) {
     console.error("No roll expression provided.");
@@ -76,7 +75,12 @@ async function parseInput(text) {
 // ROLLING
 async function rollExpression(text) {
   console.log(`Rolling expression: ${text}`);
-  text = text.toLowerCase().trim();
+  let expression = text.toLowerCase().trim();
+
+  // Expand multiplier-based keywords like "2db4"
+  expression = expression.replace(/(\d+)db(\d+)/g, (match, multiplier, dbLevel) => {
+    return Array.from({ length: parseInt(multiplier) }, () => `db${dbLevel}`).join(' + ');
+  });
 
   // Handle keywords and special cases
   const DBKeyword = [
@@ -111,15 +115,13 @@ async function rollExpression(text) {
   ];
 
   DBKeyword.forEach(({ key, value }) => {
-    if (text.includes(key)) {
-      text = text.replace(key, value);
-    }
+    expression = expression.replaceAll(key, value);
   });
 
-  console.log(`Final roll expression: ${text}`);
+  console.log(`Final roll expression: ${expression}`);
 
   const rolls = [];
-  const rollParts = text.split('+').map(part => part.trim());
+  const rollParts = expression.split('+').map(part => part.trim());
 
   for (const part of rollParts) {
     const match = part.match(/(\d*)d(\d+)/);
@@ -157,35 +159,26 @@ async function rollExpression(text) {
   const totalRoll = rolls.reduce((sum, roll) => sum + roll.total, 0);
   console.log(`Roll results:`, rolls);
 
-  let rollText = rolls.map(roll => {
-    return `[ ${roll.results.join(', ')} ]`;
-  }).join(' + ');
+  let rollText = rolls.map(roll => `[ ${roll.results.join(', ')} ]`).join(' + ');
 
   console.log(`Roll breakdown: ${rollText}`);
   console.log(`Total roll: ${totalRoll}`);
 
-  return `${rollText} = ${totalRoll.toString()}`;
-
-
-
-
-
-
-
-
-
-
-
-  return text;
-
+  return {
+    expression: expression,
+    rolls: rollText,
+    total: totalRoll
+  };
 }
+
 
 // LOGGING
 function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
   newEntry.className = "card";
-  newEntry.innerHTML = `${user}: ${text.join("<br>")}`;
+  newEntry.innerHTML = `<span class="log user">${user}:</span> ${text.expression}<br>
+  <span class="log result">${text.rolls}</span> = <span class="log total">${text.total}</span>`;
   logCards.insertBefore(newEntry, logCards.firstChild);
 }
 
