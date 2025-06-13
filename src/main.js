@@ -17,6 +17,12 @@ document.querySelector('#app').innerHTML = `
     <div id="logCards">
     <div>
   </div>
+
+  <div id="historyContainer">
+  <h3>Historique des jets</h3>
+  <ul id="rollHistory"></ul>
+</div>
+
 `
 OBR.onReady(() => OBR.player.getName().then((playerName) => {
   setupDiceRoller(playerName);
