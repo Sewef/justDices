@@ -2,17 +2,11 @@ import OBR from "@owlbear-rodeo/sdk";
 import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
 
-let localConfig = {
-  playerName: "",
-}
-
 // SETUP
 export function setupDiceRoller(playerName) {
 
-  // console.log(`Setting up dice roller for player: ${playerName}`);
+  console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
   // console.log("Connection ID:", OBR.player.id);
-
-  localConfig.playerName = playerName;
 
   // Setup Submit event
   document.getElementById("hiddenRollButton").addEventListener("click", async () => {
@@ -33,12 +27,12 @@ export function setupDiceRoller(playerName) {
     const isGM = await OBR.player.getRole() === "GM";
 
     // console.log("Current Player ID:", currentPlayer);
-    // console.log("Sender ID:", event.data.id);
+    // console.log("Sender ID:", event.data.senderId);
   
     let show = true;
     if (event.data.text.hidden) {
       // console.log("Jet caché reçu, vérification des permissions...");
-      if (event.data.id !== currentPlayer && !isGM) {
+      if (event.data.senderId !== currentPlayer && !isGM) {
         // console.log("Jet caché non affiché (pas le lanceur ni GM).");
         show = false;
       }
@@ -79,12 +73,12 @@ async function submitInput(text) {
   };
 
   // now everything is broadcasted then shown if necessary
-  //addLogEntry(localConfig.playerName, resultStr);
-  broadcastLogEntry(localConfig.playerName, resultStr);
+  //addLogEntry(OBR.player.getName(), resultStr);
+  broadcastLogEntry(await OBR.player.getName(), resultStr);
 }
 
 // LOGGING
-function addLogEntry(user, text) {
+async function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
   newEntry.className = "card log-entry-animate";  // Ajout de la classe animée
@@ -117,7 +111,7 @@ function addLogEntry(user, text) {
   }
 }
 
-function broadcastLogEntry(user, text) {
+async function broadcastLogEntry(user, text) {
   // console.log(`Broadcasting log entry from ${user}:`, text);
-  OBR.broadcast.sendMessage("justdices.dice-roll", { id: OBR.player.id, user: user, text: text }, { destination: 'ALL' });
+  OBR.broadcast.sendMessage("justdices.dice-roll", { senderId: OBR.player.id, user: user, text: text }, { destination: 'ALL' });
 }

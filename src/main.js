@@ -4,10 +4,6 @@ import javascriptLogo from './javascript.svg'
 import viteLogo from '/vite.svg'
 import { setupDiceRoller } from './roller.js';
 
-if (import.meta.env.MODE !== 'development') {
-  // console.log = function () {};
-}
-
 document.querySelector('#app').innerHTML = `
   <form id="input">
     <div class="input-group">
