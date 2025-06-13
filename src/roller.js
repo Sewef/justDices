@@ -61,18 +61,23 @@ function addLogEntry(user, text) {
         <span class="log result">${text.rolls}</span> = 
         <span class="log total">${text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${originalCommand}">🎲</button>
+      <button class="reroll-button" data-command="${originalCommand}">
+        <span class="dice-icon">🎲</span>
+      </button>
     </div>
   `;
 
   logCards.insertBefore(newEntry, logCards.firstChild);
 
-  newEntry.querySelector(".reroll-button").addEventListener("click", (e) => {
-    const command = e.target.getAttribute("data-command");
-    if (command) {
-      submitInput(command);
-    }
-  });
+  const rerollBtn = newEntry.querySelector(".reroll-button");
+  if (rerollBtn) {
+    rerollBtn.addEventListener("click", async (e) => {
+      const command = e.currentTarget.getAttribute("data-command");
+      if (command) {
+        await submitInput(command);
+      }
+    });
+  }
 }
 
 
