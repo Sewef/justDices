@@ -28,6 +28,8 @@ learn-more:
 * `/gr d20` + `Enter` will roll 1d20 but only GMs and the player will see the result
 * With no `/r` or `/gr`, the result is broadcasted
 * Example: `/r 1d20`, `1d20` are public rolls, `/gr 1d20` is private
+* Any numbered dice should work
+* DFudge compliant: use `dF` or `dFudge` for 4 classic 4 rolls, or `XdF` for other
 * PokemonTabletopUnited 1.05 compliant: use `dbX` to put the whole Damage Base formula. Also works with `XdbX` (like `2db4` for crits)
 
 ## Buttons
