@@ -84,7 +84,9 @@ async function submitInput(text) {
 
   // now everything is broadcasted then shown if necessary
   //addLogEntry(OBR.player.getName(), resultStr);
-  broadcastLogEntry(await OBR.player.getName(), resultStr);
+  await broadcastLogEntry(await OBR.player.getName(), resultStr);
+
+  document.getElementById("inputField").value = ""; // Clear the input field
 }
 
 // LOGGING
