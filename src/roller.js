@@ -91,9 +91,9 @@ async function submitInput(text) {
 async function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
-  
+
   newEntry.className = "card log-entry-animate";
-  
+
   if (text.hidden) {
     newEntry.classList.add("hidden-roll");
   } else {
@@ -105,11 +105,14 @@ async function addLogEntry(user, text) {
   newEntry.innerHTML = `
     <div class="log-entry">
       <div class="log-text">
-        <span class="log user">${user}:</span> ${text.expression}<br>
+        <span class="log user">
+          ${text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
+          ${user}:
+        </span> ${text.expression}<br>
         <span class="log result">${text.rolls}</span> = 
         <span class="log total">${text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${originalCommand}" title="Relancer le jet">
+      <button class="reroll-button" data-command="${originalCommand}" title="Reroll">
         <span class="dice-icon">🎲</span>
       </button>
     </div>
