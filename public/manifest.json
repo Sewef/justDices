@@ -1,9 +1,9 @@
 {
-    "name": "SimplyRoll",
+    "name": "JustDices",
     "version": "1.0.0",
     "manifest_version": 1,
     "action": {
-      "title": "SimplyRoll",
+      "title": "JustDices",
       "icon": "/icon.svg",
       "popover": "/",
       "height": 600,

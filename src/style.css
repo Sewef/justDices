@@ -23,7 +23,6 @@ a:hover {
 }
 
 body {
-  margin: 0;
   display: flex;
   place-items: center;
   min-width: 320px;
@@ -36,10 +35,29 @@ h1 {
 }
 
 #app {
+  height: 100vh;
+  width: 100%;
   max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  margin: 10px 0;
+  text-align: left;
+}
+
+#input {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+}
+
+#input > input {
+  font-size: large;
+  line-height: 36px;
+  height: 36px;
+}
+
+#inputField {
+  width: 75%;
 }
 
 .logo {
@@ -56,7 +74,10 @@ h1 {
 }
 
 .card {
-  padding: 2em;
+  padding: 1em;
+  border: 1px solid white;
+  margin: 0.5em;
+  border-radius: 8px;
 }
 
 .read-the-docs {
