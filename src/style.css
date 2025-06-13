@@ -220,6 +220,21 @@ button:hover {
   color: #888;
 }
 
+@keyframes fadeInSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.log-entry-animate {
+  animation: fadeInSlideDown 0.5s ease forwards;
+}
+
 button {
   border-radius: 8px;
   border: 1px solid transparent;

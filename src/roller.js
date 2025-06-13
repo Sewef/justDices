@@ -9,28 +9,48 @@ let localConfig = {
 // SETUP
 export function setupDiceRoller(playerName) {
 
-  console.log(`Setting up dice roller for player: ${playerName}`);
+  // console.log(`Setting up dice roller for player: ${playerName}`);
+  // console.log("Connection ID:", OBR.player.id);
 
   localConfig.playerName = playerName;
 
   // Setup Submit event
   document.getElementById("hiddenRollButton").addEventListener("click", async () => {
     const value = document.getElementById("inputField").value;
-    if (!value) return;
     await submitInput("/gr " + value);
   });
 
-  
+
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault(); // Prevent form from refreshing the page
     const value = document.getElementById("inputField").value;
     await submitInput("/r " + value);
   });
+
+  OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
+    // console.log(event);
+    const currentPlayer = await OBR.player.id;
+    const isGM = await OBR.player.getRole() === "GM";
+
+    // console.log("Current Player ID:", currentPlayer);
+    // console.log("Sender ID:", event.data.id);
+  
+    let show = true;
+    if (event.data.text.hidden) {
+      // console.log("Jet caché reçu, vérification des permissions...");
+      if (event.data.id !== currentPlayer && !isGM) {
+        // console.log("Jet caché non affiché (pas le lanceur ni GM).");
+        show = false;
+      }
+    }
+
+    if (show) addLogEntry(event.data.user, event.data.text);
+  });
 }
 
 // INPUT WORKFLOW
 async function submitInput(text) {
-  console.log(text);
+  // console.log(text);
 
   // Parse input to get Roll Expression
   let parsedInput = await parseInput(text);
@@ -46,7 +66,7 @@ async function submitInput(text) {
     return;
   }
 
-  console.log(parsedInput);
+  // console.log(parsedInput);
 
   // Roll the dice using the parsed expression
   const rollResult = await rollExpression(parsedInput.rollExpression);
@@ -54,10 +74,12 @@ async function submitInput(text) {
   const resultStr = {
     expression: `${text} (${rollResult.expression})`,
     rolls: rollResult.rolls,
-    total: rollResult.total
+    total: rollResult.total,
+    hidden: parsedInput.hidden
   };
-  
-  addLogEntry(localConfig.playerName, resultStr);
+
+  // now everything is broadcasted then shown if necessary
+  //addLogEntry(localConfig.playerName, resultStr);
   broadcastLogEntry(localConfig.playerName, resultStr);
 }
 
@@ -65,7 +87,7 @@ async function submitInput(text) {
 function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
-  newEntry.className = "card";
+  newEntry.className = "card log-entry-animate";  // Ajout de la classe animée
 
   const originalCommand = text.expression.split(" (")[0];
 
@@ -76,7 +98,7 @@ function addLogEntry(user, text) {
         <span class="log result">${text.rolls}</span> = 
         <span class="log total">${text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${originalCommand}">
+      <button class="reroll-button" data-command="${originalCommand}" title="Relancer le jet">
         <span class="dice-icon">🎲</span>
       </button>
     </div>
@@ -95,7 +117,7 @@ function addLogEntry(user, text) {
   }
 }
 
-
 function broadcastLogEntry(user, text) {
-  return;
+  // console.log(`Broadcasting log entry from ${user}:`, text);
+  OBR.broadcast.sendMessage("justdices.dice-roll", { id: OBR.player.id, user: user, text: text }, { destination: 'ALL' });
 }
