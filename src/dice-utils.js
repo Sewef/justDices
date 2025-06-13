@@ -21,6 +21,22 @@ export async function parseInput(text) {
         console.error("No roll expression provided.");
         return null;
     }
+
+    // Validation détaillée : découpage en tokens par + ou -
+    const tokens = rollExpression.split(/[\+\-]/).map(t => t.trim());
+
+    const validTokenRegex = /^(\d*d\d+|db\d+|\d+)$/i;
+    // - \d*d\d+ : 0 ou plusieurs dés + d + taille dé (ex: 1d6, d20 = 1d20 implicite)
+    // - db\d+ : notre token spécial (ex: db12)
+    // - \d+ : nombre entier (ex: 4, 10)
+
+    for (const token of tokens) {
+        if (!validTokenRegex.test(token)) {
+            console.error(`Invalid token in roll expression: "${token}"`);
+            return null;
+        }
+    }
+
     return {
         rollExpression: rollExpression,
         hidden: hidden

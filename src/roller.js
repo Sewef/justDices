@@ -14,9 +14,17 @@ export function setupDiceRoller(playerName) {
   localConfig.playerName = playerName;
 
   // Setup Submit event
+  document.getElementById("hiddenRollButton").addEventListener("click", async () => {
+    const value = document.getElementById("inputField").value;
+    if (!value) return;
+    await submitInput("/gr " + value);
+  });
+
+  
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault(); // Prevent form from refreshing the page
-    await submitInput(document.getElementById("inputField").value);
+    const value = document.getElementById("inputField").value;
+    await submitInput("/r " + value);
   });
 }
 
@@ -28,6 +36,13 @@ async function submitInput(text) {
   let parsedInput = await parseInput(text);
   if (!parsedInput) {
     console.error("Failed to parse input.");
+
+    const inputField = document.getElementById("inputField");
+    inputField.classList.add("input-error-text", "input-error-outline");
+    setTimeout(() => {
+      inputField.classList.remove("input-error-text", "input-error-outline");
+    }, 1000);
+
     return;
   }
 

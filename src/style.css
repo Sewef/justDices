@@ -56,9 +56,73 @@ h1 {
   height: 36px;
 }
 
-#inputField {
-  width: 75%;
+.input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
+
+
+#inputField {
+  flex: 1;
+  font-size: 1.2em;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-family: inherit;
+  box-sizing: border-box;
+  height: 36px;
+  outline-offset: 2px;
+  transition: border-color 0.2s;
+}
+
+@keyframes text-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+
+.input-error-text {
+  animation: text-shake 0.5s;
+  display: inline-block;
+  /* force repaint to limiter les glitches */
+  will-change: transform;
+}
+
+.input-error-outline {
+  /* box-shadow au lieu de border pour éviter le décalage */
+  box-shadow: 0 0 5px 2px red;
+  border: 1px solid transparent; /* garde la largeur border sans changer visuel */
+  transition: box-shadow 0.3s ease;
+}
+
+#inputField:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+button {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 6px 10px;
+  height: 36px;
+  font-family: inherit;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button:hover {
+  border-color: #007bff;
+  background-color: #e6f0ff;
+  transform: scale(1.1);
+}
+
 
 .logo {
   height: 6em;
