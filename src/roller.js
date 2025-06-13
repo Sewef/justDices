@@ -129,37 +129,50 @@ async function rollExpression(text) {
       const numDice = parseInt(match[1]) || 1;
       const dieSize = parseInt(match[2]);
       const rollResults = [];
-
+  
       for (let i = 0; i < numDice; i++) {
         const roll = Math.floor(Math.random() * dieSize) + 1;
-        rollResults.push(roll);
+        let type = "normal";
+        if (roll === 1) type = "min";
+        else if (roll === dieSize) type = "max";
+        rollResults.push({ value: roll, type });
       }
-
+  
       rolls.push({
         expression: part,
         results: rollResults,
-        total: rollResults.reduce((sum, roll) => sum + roll, 0)
+        total: rollResults.reduce((sum, roll) => sum + roll.value, 0)
       });
     } else {
+      // Handle plain numbers or subtractions
       const subParts = part.split('-').map(subPart => subPart.trim());
       let total = parseInt(subParts[0]);
-
+  
       for (let i = 1; i < subParts.length; i++) {
         total -= parseInt(subParts[i]);
       }
-
+  
       rolls.push({
         expression: part,
-        results: [total],
+        results: [{ value: total, type: "normal" }],
         total: total
       });
     }
   }
+  
 
   const totalRoll = rolls.reduce((sum, roll) => sum + roll.total, 0);
   console.log(`Roll results:`, rolls);
 
-  let rollText = rolls.map(roll => `[ ${roll.results.join(', ')} ]`).join(' + ');
+  let rollText = rolls.map(roll => {
+    const formatted = roll.results.map(res => {
+      if (res.type === "min") return `<span class="min">${res.value}</span>`;
+      if (res.type === "max") return `<span class="max">${res.value}</span>`;
+      return `${res.value}`;
+    }).join(', ');
+    return `[ ${formatted} ]`;
+  }).join(' + ');
+  
 
   console.log(`Roll breakdown: ${rollText}`);
   console.log(`Total roll: ${totalRoll}`);

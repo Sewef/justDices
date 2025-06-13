@@ -90,6 +90,31 @@ h1 {
   font-size: large;
 }
 
+#logCards .card .log.result .min {
+  color: red;
+  font-weight: bold;
+}
+#logCards .card .log.result .max {
+  color: green;
+  font-weight: bold;
+}
+
+@keyframes rollPop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.card .log.result span {
+  animation: rollPop 0.3s ease-out;
+}
+
+.card .log.result {
+  background: #111;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #eee;
+  font-family: monospace;
+}
+
 .read-the-docs {
   color: #888;
 }
