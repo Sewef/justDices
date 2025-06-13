@@ -14,7 +14,7 @@ export function setupDiceRoller(playerName) {
     const command = value.trim().startsWith("/gr") ? value : "/gr " + value;
     await submitInput(command);
   });
-  
+
   document.getElementById("rollButton").addEventListener("click", async () => {
     const value = document.getElementById("inputField").value;
     const command = value.trim().startsWith("/r") ? value : "/r " + value;
@@ -38,7 +38,7 @@ export function setupDiceRoller(playerName) {
 
     // console.log("Current Player ID:", currentPlayer);
     // console.log("Sender ID:", event.data.senderId);
-  
+
     let show = true;
     if (event.data.text.hidden) {
       // console.log("Jet caché reçu, vérification des permissions...");
@@ -91,7 +91,14 @@ async function submitInput(text) {
 async function addLogEntry(user, text) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
-  newEntry.className = "card log-entry-animate";  // Ajout de la classe animée
+  
+  newEntry.className = "card log-entry-animate";
+  
+  if (text.hidden) {
+    newEntry.classList.add("hidden-roll");
+  } else {
+    newEntry.classList.add("public-roll");
+  }
 
   const originalCommand = text.expression.split(" (")[0];
 

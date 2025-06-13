@@ -140,6 +140,7 @@ button:hover {
 .card {
   padding: 1em;
   border: 1px solid white;
+  border-left: 8px solid;
   margin: 0.5em;
   border-radius: 8px;
 }
@@ -173,6 +174,18 @@ button:hover {
 .log-text {
   flex-grow: 1;
 }
+
+.public-roll {
+  /*border-left: 4px solid #bb0000; */
+}
+.hidden-roll {
+  border-left: 8px solid;
+  border-color: #8f8f8f;
+  color: #8f8f8f;
+  font-style: italic;
+  opacity: 0.8;
+}
+
 
 .reroll-button {
   display: flex;

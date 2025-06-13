@@ -30,8 +30,8 @@ learn-more:
 * Example: `/r 1d20`, `1d20` are public rolls, `/gr 1d20` is private
 
 ## Buttons
-* Any formula will automatically get `/gr` or `/r` prefix when pressing the "Hidden roll" or "Roll it" button
-* Todo: better handling or "submit tag"...
+* Any formula will automatically get `/r` or `/gr` prefix when pressing the "Hidden roll" or "Roll it" button
+* If formula starts with `/r` or `/gr`, clicking the wrong button will throw an error
 
 ### Rolls History
 
