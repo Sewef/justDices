@@ -25,10 +25,11 @@ export async function parseInput(text) {
     // Validation détaillée : découpage en tokens par + ou -
     const tokens = rollExpression.split(/[\+\-]/).map(t => t.trim());
 
-    const validTokenRegex = /^(\d*d\d+|db\d+|\d+)$/i;
-    // - \d*d\d+ : 0 ou plusieurs dés + d + taille dé (ex: 1d6, d20 = 1d20 implicite)
-    // - db\d+ : notre token spécial (ex: db12)
-    // - \d+ : nombre entier (ex: 4, 10)
+    const validTokenRegex = /^(\d*d\d+|db\d+|\d*dF(udge)?|\d+)$/i;
+    // - \d*d\d+ : dés classiques (ex: d6, 3d20)
+    // - db\d+ : dés spéciaux de bonus (ex: db14)
+    // - \d*dF(udge)? : dés Fudge (ex: dF, 4dF, 2dFudge)
+    // - \d+ : constantes (ex: 5)
 
     for (const token of tokens) {
         if (!validTokenRegex.test(token)) {
@@ -94,8 +95,28 @@ export async function rollExpression(text) {
 
     const rolls = [];
     const rollParts = expression.split('+').map(part => part.trim());
-
     for (const part of rollParts) {
+        // 🎲 Gestion des dés Fudge
+        if (part.match(/^(\d*)dF(udge)?$/i)) {
+            const match = part.match(/^(\d*)dF(udge)?$/i);
+            const numDice = parseInt(match[1]) || 4; // par défaut 4 dés Fudge
+            const rollResults = [];
+
+            for (let i = 0; i < numDice; i++) {
+                const val = [-1, 0, 1][Math.floor(Math.random() * 3)];
+                rollResults.push({ value: val, type: "fudge" });
+            }
+
+            rolls.push({
+                expression: part,
+                results: rollResults,
+                total: rollResults.reduce((sum, r) => sum + r.value, 0)
+            });
+
+            continue;
+        }
+
+        // 🎲 Gestion classique des dés (NdX)
         const match = part.match(/(\d*)d(\d+)/);
         if (match) {
             const numDice = parseInt(match[1]) || 1;
@@ -116,8 +137,8 @@ export async function rollExpression(text) {
                 total: rollResults.reduce((sum, roll) => sum + roll.value, 0)
             });
         } else {
-            // Handle plain numbers or subtractions
-            const subParts = part.split('-').map(subPart => subPart.trim());
+            // 🎯 Constantes et soustractions
+            const subParts = part.split('-').map(p => p.trim());
             let total = parseInt(subParts[0]);
 
             for (let i = 1; i < subParts.length; i++) {
@@ -132,12 +153,16 @@ export async function rollExpression(text) {
         }
     }
 
-
     const totalRoll = rolls.reduce((sum, roll) => sum + roll.total, 0);
     // console.log(`Roll results:`, rolls);
 
     let rollText = rolls.map(roll => {
         const formatted = roll.results.map(res => {
+            if (res.type === "fudge") {
+                if (res.value === 1) return `<span class="fudge-plus">+1</span>`;
+                if (res.value === 0) return `<span class="fudge-zero">0</span>`;
+                if (res.value === -1) return `<span class="fudge-minus">−1</span>`;
+            }
             if (res.type === "min") return `<span class="min">${res.value}</span>`;
             if (res.type === "max") return `<span class="max">${res.value}</span>`;
             return `${res.value}`;
