@@ -28,6 +28,7 @@ learn-more:
 * `/gr d20` + `Enter` will roll 1d20 but only GMs and the player will see the result
 * With no `/r` or `/gr`, the result is broadcasted
 * Example: `/r 1d20`, `1d20` are public rolls, `/gr 1d20` is private
+* PokemonTabletopUnited 1.05 compliant: use `dbX` to put the whole Damage Base formula. Also works with `XdbX` (like `2db4` for crits)
 
 ## Buttons
 * Any formula will automatically get `/r` or `/gr` prefix when pressing the "Hidden roll" or "Roll it" button
