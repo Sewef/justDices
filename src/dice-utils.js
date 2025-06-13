@@ -47,7 +47,7 @@ export async function parseInput(text) {
 
 export async function rollExpression(text) {
     console.log(`Rolling expression: ${text}`);
-    let expression = text.toLowerCase().trim();
+    let expression = text.toLowerCase().replaceAll(" ", "").trim();
 
     // Expand multiplier-based keywords like "2db4"
     expression = expression.replace(/(\d+)db(\d+)/g, (match, multiplier, dbLevel) => {
