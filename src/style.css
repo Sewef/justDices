@@ -40,11 +40,28 @@ h1 {
   max-width: 1280px;
   margin: 10px 0;
   text-align: left;
+  width: 100%;
+  max-width: 100%;
+  padding: 0 1em;
+  box-sizing: border-box;
+}
+
+#inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-bottom: 1em;
+  flex-wrap: wrap; /* 👈 Permet de passer à la ligne si besoin */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 #input {
   display: flex;
   flex-direction: row;
+  flex: 1 1 auto;
+  max-width: 100%;
   align-items: center;
   justify-content: center;
   gap: 1em;
@@ -59,12 +76,16 @@ h1 {
 .input-group {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.3em;
+  flex: 1 1 auto;
+  max-width: 100%;
+  min-width: 0; /* 👈 Important pour éviter les débordements */
 }
 
 
 #inputField {
   flex: 1;
+  min-width: 0;
   font-size: 1.2em;
   padding: 6px 10px;
   border: 1px solid #ccc;
@@ -270,10 +291,9 @@ button:focus-visible {
 }
 
 #toggleDicePanel {
-  font-size: 1.2em;
-  padding: 0.3em 0.6em;
-  margin: 0.5em;
-  cursor: pointer;
+  height: 36px;
+  padding: 0 0.8em;
+  font-size: 1.4em;
 }
 
 #dicePanel {
