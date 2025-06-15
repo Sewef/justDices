@@ -11,6 +11,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  overflow-y: scroll;
 }
 
 a {
@@ -26,7 +28,7 @@ body {
   display: flex;
   place-items: center;
   min-width: 320px;
-  min-height: 100vh;
+  /*min-height: 100vh;*/
 }
 
 h1 {
@@ -35,7 +37,7 @@ h1 {
 }
 
 #app {
-  height: 100vh;
+  /*height: 100vh;*/
   width: 100%;
   max-width: 1280px;
   margin: 10px 0;
