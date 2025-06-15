@@ -1,383 +1,398 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-  
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  
-  overflow-y: scroll;
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #242424;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    overflow-y: scroll;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+    color: #535bf2;
 }
 
 body {
-  display: flex;
-  place-items: center;
-  min-width: 320px;
+    display: flex;
+    place-items: center;
+    min-width: 320px;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+    font-size: 3.2em;
+    line-height: 1.1;
 }
 
 #app {
-  width: 100%;
-  max-width: 1280px;
-  margin: 10px 0;
-  text-align: left;
-  width: 100%;
-  max-width: 100%;
-  padding: 0 1em;
-  box-sizing: border-box;
+    width: 100%;
+    max-width: 1280px;
+    margin: 10px 0;
+    text-align: left;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 1em;
+    box-sizing: border-box;
 }
 
 #inputRow {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin-bottom: 1em;
-  flex-wrap: wrap; /* 👈 Permet de passer à la ligne si besoin */
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 1em;
+    flex-wrap: wrap;
+    /* 👈 Permet de passer à la ligne si besoin */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 #input {
-  display: flex;
-  flex-direction: row;
-  flex: 1 1 auto;
-  max-width: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: 1em;
+    display: flex;
+    flex-direction: row;
+    flex: 1 1 auto;
+    max-width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 1em;
 }
 
-#input > input {
-  font-size: large;
-  line-height: 36px;
-  height: 36px;
+#input>input {
+    font-size: large;
+    line-height: 36px;
+    height: 36px;
 }
 
 .input-group {
-  display: flex;
-  align-items: center;
-  gap: 0.3em;
-  flex: 1 1 auto;
-  max-width: 100%;
-  min-width: 0; /* 👈 Important pour éviter les débordements */
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    flex: 1 1 auto;
+    max-width: 100%;
+    min-width: 0;
+    /* 👈 Important pour éviter les débordements */
 }
 
 
 #inputField {
-  flex: 1;
-  min-width: 0;
-  font-size: 1.2em;
-  padding: 6px 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: inherit;
-  box-sizing: border-box;
-  height: 36px;
-  outline-offset: 2px;
-  transition: border-color 0.2s;
+    flex: 1;
+    min-width: 0;
+    font-size: 1.2em;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: inherit;
+    box-sizing: border-box;
+    height: 36px;
+    outline-offset: 2px;
+    transition: border-color 0.2s;
 }
 
 @keyframes text-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-3px); }
-  40%, 80% { transform: translateX(3px); }
+    0%, 100% {
+        transform: translateX(0);
+    }
+    20%, 60% {
+        transform: translateX(-3px);
+    }
+    40%, 80% {
+        transform: translateX(3px);
+    }
 }
 
 .input-error-text {
-  animation: text-shake 0.5s;
-  display: inline-block;
-  /* force repaint to limiter les glitches */
-  will-change: transform;
+    animation: text-shake 0.5s;
+    display: inline-block;
+    /* force repaint to limiter les glitches */
+    will-change: transform;
 }
 
 .input-error-outline {
-  /* box-shadow au lieu de border pour éviter le décalage */
-  box-shadow: 0 0 5px 2px red;
-  border: 1px solid transparent; /* garde la largeur border sans changer visuel */
-  transition: box-shadow 0.3s ease;
+    /* box-shadow au lieu de border pour éviter le décalage */
+    box-shadow: 0 0 5px 2px red;
+    border: 1px solid transparent;
+    /* garde la largeur border sans changer visuel */
+    transition: box-shadow 0.3s ease;
 }
 
 #inputField:focus {
-  border-color: #007bff;
-  outline: none;
+    border-color: #007bff;
+    outline: none;
 }
 
 button {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1.2em;
-  padding: 6px 10px;
-  height: 36px;
-  font-family: inherit;
-  transition: all 0.2s;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 6px 10px;
+    height: 36px;
+    font-family: inherit;
+    transition: all 0.2s;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 button:hover {
-  border-color: #007bff;
-  background-color: #e6f0ff;
-  transform: scale(1.1);
+    border-color: #007bff;
+    background-color: #e6f0ff;
+    transform: scale(1.1);
 }
 
 
 .logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+    height: 6em;
+    padding: 1.5em;
+    will-change: filter;
+    transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+    filter: drop-shadow(0 0 2em #646cffaa);
 }
 .logo.vanilla:hover {
-  filter: drop-shadow(0 0 2em #f7df1eaa);
+    filter: drop-shadow(0 0 2em #f7df1eaa);
 }
 
 .card {
-  padding: 1em;
-  border: 1px solid white;
-  border-left: 8px solid;
-  margin: 0.5em;
-  border-radius: 8px;
+    padding: 1em;
+    border: 1px solid white;
+    border-left: 8px solid;
+    margin: 0.5em;
+    border-radius: 8px;
 }
 
 #logCards .card span.log.user {
-  font-weight: bold;
-  font-size: large;
+    font-weight: bold;
+    font-size: large;
 }
 
 #logCards .card span.log.total {
-  font-weight: bold;
-  font-size: large;
+    font-weight: bold;
+    font-size: large;
 }
 
 #logCards .card .log.result .min {
-  color: red;
-  font-weight: bold;
+    color: red;
+    font-weight: bold;
 }
 #logCards .card .log.result .max {
-  color: green;
-  font-weight: bold;
+    color: green;
+    font-weight: bold;
 }
 
 .log-entry {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
 }
 
 .log-text {
-  flex-grow: 1;
+    flex-grow: 1;
 }
 
-.public-roll {
-}
+.public-roll {}
 
 .hidden-roll {
-  border-color: #8f8f8f;
-  color: #8f8f8f;
+    border-color: #8f8f8f;
+    color: #8f8f8f;
 }
 
 
 .reroll-button {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  font-size: 1.2em;
-  transition: transform 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1.2em;
+    transition: transform 0.3s ease;
 }
 
 .reroll-button .dice-icon {
-  display: inline-block;
-  transition: transform 0.3s ease;
+    display: inline-block;
+    transition: transform 0.3s ease;
 }
 
 .reroll-button:hover .dice-icon {
-  transform: rotate(90deg);
+    transform: rotate(90deg);
 }
 
 .reroll-button:active .dice-icon {
-  transform: rotate(360deg);
+    transform: rotate(360deg);
 }
 
 
 @keyframes rollPop {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 .card .log.result span {
-  animation: rollPop 0.3s ease-out;
+    animation: rollPop 0.3s ease-out;
 }
 
 .card .log.result {
-  background: #111;
-  padding: 4px 8px;
-  border-radius: 4px;
-  color: #eee;
-  font-family: monospace;
+    background: #111;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #eee;
+    font-family: monospace;
 }
 
 .read-the-docs {
-  color: #888;
+    color: #888;
 }
 
 @keyframes fadeInSlideDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .log-entry-animate {
-  animation: fadeInSlideDown 0.5s ease forwards;
+    animation: fadeInSlideDown 0.5s ease forwards;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #1a1a1a;
+    cursor: pointer;
+    transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
+    border-color: #646cff;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    outline: 4px auto -webkit-focus-ring-color;
 }
 
 
 .hidden {
-  display: none !important;
+    display: none !important;
 }
 
 #toggleDicePanel {
-  height: 36px;
-  padding: 0 0.8em;
-  font-size: 1.4em;
+    height: 36px;
+    padding: 0 0.8em;
+    font-size: 1.4em;
 }
 
 #dicePanel {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  width: auto;
-  max-width: 90vw; /* Limite la largeur à 90% de la fenêtre */
-  overflow-y: auto;
-  overflow-x: hidden;
-  
-  background-color: #1e1e1e;
-  color: white;
-  padding: 1em;
-  border: 2px solid #888;
-  border-radius: 10px;
-  z-index: 9999;
-  box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    width: auto;
+    max-width: 90vw;
+    /* Limite la largeur à 90% de la fenêtre */
+    overflow-y: auto;
+    overflow-x: hidden;
 
-  display: grid;
-  /*grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));*/
-  gap: 0.25em;
-  font-size: 0.85em;
+    background-color: #1e1e1e;
+    color: white;
+    padding: 1em;
+    border: 2px solid #888;
+    border-radius: 10px;
+    z-index: 9999;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);
+
+    display: grid;
+    /*grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));*/
+    gap: 0.25em;
+    font-size: 0.85em;
 }
 
 /* Ligne d'entête */
 .dice-row {
-  grid-column: 1 / -1;
-  font-weight: bold;
-  margin-top: 0.5em;
-  padding-bottom: 0.2em;
-  border-bottom: 1px solid #444;
+    grid-column: 1 / -1;
+    font-weight: bold;
+    margin-top: 0.5em;
+    padding-bottom: 0.2em;
+    border-bottom: 1px solid #444;
 }
 
 /* Boutons de dés */
 .dice-table button {
-  background: #333;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 0.3em 0.5em;
-  font-size: 0.9em;
-  transition: background-color 0.2s ease;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 0.3em 0.5em;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
 }
 
 .dice-table button:hover {
-  background: #555;
+    background: #555;
 }
 
 
 #toggleHiddenRolls {
-  font-size: 1.4em;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: white;
-  margin-left: auto;
+    font-size: 1.4em;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: white;
+    margin-left: auto;
 }
 
 .panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5em;
-  margin-bottom: 0.5em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
 }
 
 .panel-header h3 {
-  margin: 0;
-  font-size: 1.1em;
-  flex-grow: 1;
+    margin: 0;
+    font-size: 1.1em;
+    flex-grow: 1;
 }
 
 .panel-controls {
-  display: flex;
-  gap: 0.3em;
+    display: flex;
+    gap: 0.3em;
 }
 
 .panel-controls button {
-  font-size: 1.2em;
-  padding: 0.2em 0.4em;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: inherit;
+    font-size: 1.2em;
+    padding: 0.2em 0.4em;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: inherit;
 }
