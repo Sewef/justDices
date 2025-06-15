@@ -2,9 +2,53 @@ import OBR from "@owlbear-rodeo/sdk";
 import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
 
+
+async function setupQuickDice() {
+  const toggleDicePanelBtn = document.getElementById('toggleDicePanel');
+  const dicePanel = document.getElementById('dicePanel');
+  const closeDicePanelBtn = document.getElementById('closeDicePanel');
+  const toggleHiddenRollsBtn = document.getElementById('toggleHiddenRolls');
+
+  let hideRollsFromQuickPanel = false;
+
+  toggleDicePanelBtn.addEventListener('click', () => {
+    const isHidden = dicePanel.classList.contains('hidden');
+    if (isHidden) {
+      dicePanel.classList.remove('hidden');
+      dicePanel.setAttribute('aria-hidden', 'false');
+    } else {
+      dicePanel.classList.add('hidden');
+      dicePanel.setAttribute('aria-hidden', 'true');
+    }
+  });
+
+  closeDicePanelBtn.addEventListener('click', () => {
+    dicePanel.classList.add('hidden');
+    dicePanel.setAttribute('aria-hidden', 'true');
+  });
+
+  toggleHiddenRollsBtn.addEventListener('click', () => {
+    hideRollsFromQuickPanel = !hideRollsFromQuickPanel;
+    toggleHiddenRollsBtn.textContent = hideRollsFromQuickPanel ? '🙈' : '🐵';
+    console.log(`Hide rolls from quick panel: ${hideRollsFromQuickPanel}`);
+  });
+
+  // Gestion des clics sur les boutons de dés dans le tableau
+  dicePanel.querySelectorAll('.dice-table button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dice = btn.getAttribute('data-dice');
+      const count = parseInt(btn.getAttribute('data-count'), 10);
+      if (!dice || !count || count < 1) return;
+
+      // Exemple d'exécution de lancer (à adapter selon ta logique)
+      const rollCommand = hideRollsFromQuickPanel ? `/gr ${count}${dice}` : `/r ${count}${dice}`;
+      submitInput(rollCommand);
+    });
+  });
+}
 // SETUP
 export function setupDiceRoller(playerName) {
-
+  setupQuickDice();
   console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
   // console.log("Connection ID:", OBR.player.id);
 
