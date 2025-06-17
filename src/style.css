@@ -353,6 +353,7 @@ button:focus-visible {
     padding: 0.3em 0.5em;
     font-size: 0.9em;
     transition: background-color 0.2s ease;
+    width: 25px;
 }
 
 .dice-table button:hover {
