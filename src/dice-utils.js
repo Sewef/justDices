@@ -1,8 +1,6 @@
 
 // INPUT PARSING
 export async function parseInput(text) {
-    // console.log(`Parsing input: ${text}`);
-
     let rollExpression = "";
     let hidden = false;
 
@@ -47,7 +45,6 @@ export async function parseInput(text) {
 
 
 export async function rollExpression(text) {
-    // console.log(`Rolling expression: ${text}`);
     let expression = text.toLowerCase().replaceAll(" ", "").trim();
 
     // Expand multiplier-based keywords like "2db4"
@@ -90,8 +87,6 @@ export async function rollExpression(text) {
     DBKeyword.forEach(({ key, value }) => {
         expression = expression.replaceAll(key, value);
     });
-
-    // console.log(`Final roll expression: ${expression}`);
 
     const rolls = [];
     // Split expression into parts, keeping the operators
@@ -165,7 +160,6 @@ export async function rollExpression(text) {
     }
 
     const totalRoll = rolls.reduce((sum, roll) => sum + roll.total, 0);
-    // console.log(`Roll results:`, rolls);
 
     let rollText = rolls.map(roll => {
         const formatted = roll.results.map(res => {
@@ -180,10 +174,6 @@ export async function rollExpression(text) {
         }).join(', ');
         return `[ ${formatted} ]`;
     }).join(' + ');
-
-
-    // console.log(`Roll breakdown: ${rollText}`);
-    // console.log(`Total roll: ${totalRoll}`);
 
     return {
         expression: expression,

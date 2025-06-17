@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>quickdice Popover</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+
+
+        #dicePanel {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            width: auto;
+            max-width: 90vw;
+            /* Limite la largeur à 90% de la fenêtre */
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            color: white;
+            padding: 1em;
+            border-radius: 10px;
+            z-index: 9999;
+
+            display: grid;
+            /*grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));*/
+            gap: 0.25em;
+            font-size: 0.85em;
+        }
+
+        /* Ligne d'entête */
+        .dice-row {
+            grid-column: 1 / -1;
+            font-weight: bold;
+            margin-top: 0.5em;
+            padding-bottom: 0.2em;
+            border-bottom: 1px solid #444;
+        }
+
+        /* Boutons de dés */
+        .dice-table button {
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            padding: 0.3em 0.5em;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+
+
+        #toggleHiddenRolls {
+            font-size: 1.4em;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: white;
+            margin-left: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            flex-grow: 1;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 0.3em;
+        }
+
+        .panel-controls button {
+            font-size: 1.2em;
+            padding: 0.2em 0.4em;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="dicePanel" class="dice-panel">
+        <div class="panel-header">
+            <h3>Quick Dice Rolls</h3>
+            <div class="panel-controls">
+                <button id="toggleHiddenRolls" title="Toggle hide rolls" aria-label="Toggle hide rolls">🐵</button>
+                <button id="closeDicePanel" aria-label="Close panel">✖</button>
+            </div>
+        </div>
+        <table id="dice-table" class="dice-table"></table>
+        <script type="module" src="/src/quickdice.js"></script>
+    </div>
+</body>
+
+</html>

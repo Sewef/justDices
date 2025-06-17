@@ -1,56 +1,17 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
+import { toggleDicePanel } from "./quickdice.js";
 
 
-async function setupQuickDice() {
-  const toggleDicePanelBtn = document.getElementById('toggleDicePanel');
-  const dicePanel = document.getElementById('dicePanel');
-  const closeDicePanelBtn = document.getElementById('closeDicePanel');
-  const toggleHiddenRollsBtn = document.getElementById('toggleHiddenRolls');
-
-  let hideRollsFromQuickPanel = false;
-
-  toggleDicePanelBtn.addEventListener('click', () => {
-    const isHidden = dicePanel.classList.contains('hidden');
-    if (isHidden) {
-      dicePanel.classList.remove('hidden');
-      dicePanel.setAttribute('aria-hidden', 'false');
-    } else {
-      dicePanel.classList.add('hidden');
-      dicePanel.setAttribute('aria-hidden', 'true');
-    }
-  });
-
-  closeDicePanelBtn.addEventListener('click', () => {
-    dicePanel.classList.add('hidden');
-    dicePanel.setAttribute('aria-hidden', 'true');
-  });
-
-  toggleHiddenRollsBtn.addEventListener('click', () => {
-    hideRollsFromQuickPanel = !hideRollsFromQuickPanel;
-    toggleHiddenRollsBtn.textContent = hideRollsFromQuickPanel ? '🙈' : '🐵';
-    console.log(`Hide rolls from quick panel: ${hideRollsFromQuickPanel}`);
-  });
-
-  // Gestion des clics sur les boutons de dés dans le tableau
-  dicePanel.querySelectorAll('.dice-table button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const dice = btn.getAttribute('data-dice');
-      const count = parseInt(btn.getAttribute('data-count'), 10);
-      if (!dice || !count || count < 1) return;
-
-      // Exemple d'exécution de lancer (à adapter selon ta logique)
-      const rollCommand = hideRollsFromQuickPanel ? `/gr ${count}${dice}` : `/r ${count}${dice}`;
-      submitInput(rollCommand);
-    });
-  });
-}
 // SETUP
 export function setupDiceRoller(playerName) {
-  setupQuickDice();
+  //setupQuickDice();
   console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
-  // console.log("Connection ID:", OBR.player.id);
+
+  document.getElementById('toggleDicePanel').addEventListener('click', () => {
+    toggleDicePanel();
+  });
 
   // Setup Submit event
   document.getElementById("hiddenRollButton").addEventListener("click", async () => {
@@ -76,18 +37,12 @@ export function setupDiceRoller(playerName) {
   });
 
   OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
-    // console.log(event);
     const currentPlayer = await OBR.player.id;
     const isGM = await OBR.player.getRole() === "GM";
-
-    // console.log("Current Player ID:", currentPlayer);
-    // console.log("Sender ID:", event.data.senderId);
-
+    
     let show = true;
     if (event.data.text.hidden) {
-      // console.log("Jet caché reçu, vérification des permissions...");
       if (event.data.senderId !== currentPlayer && !isGM) {
-        // console.log("Jet caché non affiché (pas le lanceur ni GM).");
         show = false;
       }
     }
@@ -97,9 +52,7 @@ export function setupDiceRoller(playerName) {
 }
 
 // INPUT WORKFLOW
-async function submitInput(text) {
-  // console.log(text);
-
+export async function submitInput(text) {
   // Parse input to get Roll Expression
   let parsedInput = await parseInput(text);
   if (!parsedInput) {
@@ -114,8 +67,6 @@ async function submitInput(text) {
     return;
   }
 
-  // console.log(parsedInput);
-
   // Roll the dice using the parsed expression
   const rollResult = await rollExpression(parsedInput.rollExpression);
 
@@ -126,11 +77,10 @@ async function submitInput(text) {
     hidden: parsedInput.hidden
   };
 
-  // now everything is broadcasted then shown if necessary
-  //addLogEntry(OBR.player.getName(), resultStr);
   await broadcastLogEntry(await OBR.player.getName(), resultStr);
 
-  document.getElementById("inputField").value = ""; // Clear the input field
+  if (document.getElementById("inputField") != null)
+    document.getElementById("inputField").value = ""; // Clear the input field
 }
 
 // LOGGING
@@ -178,6 +128,5 @@ async function addLogEntry(user, text) {
 }
 
 async function broadcastLogEntry(user, text) {
-  // console.log(`Broadcasting log entry from ${user}:`, text);
   OBR.broadcast.sendMessage("justdices.dice-roll", { senderId: OBR.player.id, user: user, text: text }, { destination: 'ALL' });
 }
