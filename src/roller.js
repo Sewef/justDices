@@ -86,13 +86,13 @@ export function setupDiceRoller(playerName) {
     let show = true;
     if (event.data.text.hidden) {
       // console.log("Jet caché reçu, vérification des permissions...");
-      if (event.data.senderId !== currentPlayer && !isGM) {
+      if (event.data.sender.id !== currentPlayer && !isGM) {
         // console.log("Jet caché non affiché (pas le lanceur ni GM).");
         show = false;
       }
     }
 
-    if (show) addLogEntry(event.data.user, event.data.text);
+    if (show) addLogEntry(event.data);
   });
 }
 
@@ -127,36 +127,37 @@ async function submitInput(text) {
   };
 
   // now everything is broadcasted then shown if necessary
-  //addLogEntry(OBR.player.getName(), resultStr);
   await broadcastLogEntry(await OBR.player.getName(), resultStr);
 
   document.getElementById("inputField").value = ""; // Clear the input field
 }
 
 // LOGGING
-async function addLogEntry(user, text) {
+async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
 
   newEntry.className = "card log-entry-animate";
 
-  if (text.hidden) {
+  if (eventData.text.hidden) {
     newEntry.classList.add("hidden-roll");
+    newEntry.style.borderColor = eventData.sender.color + "80";
   } else {
     newEntry.classList.add("public-roll");
+    newEntry.style.borderColor = eventData.sender.color;
   }
 
-  const originalCommand = text.expression.split(" (")[0];
+  const originalCommand = eventData.text.expression.split(" (")[0];
 
   newEntry.innerHTML = `
     <div class="log-entry">
       <div class="log-text">
         <span class="log user">
-          ${text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
-          ${user}:
-        </span> ${text.expression}<br>
-        <span class="log result">${text.rolls}</span> = 
-        <span class="log total">${text.total}</span>
+          ${eventData.text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
+          ${eventData.sender.name}:
+        </span> ${eventData.text.expression}<br>
+        <span class="log result">${eventData.text.rolls}</span> = 
+        <span class="log total">${eventData.text.total}</span>
       </div>
       <button class="reroll-button" data-command="${originalCommand}" title="Reroll">
         <span class="dice-icon">🎲</span>
@@ -178,6 +179,16 @@ async function addLogEntry(user, text) {
 }
 
 async function broadcastLogEntry(user, text) {
-  // console.log(`Broadcasting log entry from ${user}:`, text);
-  OBR.broadcast.sendMessage("justdices.dice-roll", { senderId: OBR.player.id, user: user, text: text }, { destination: 'ALL' });
+  let sender;
+  (async () => {
+    sender = {
+      id: await OBR.player.getId(),
+      name: await OBR.player.getName(),
+      color: await OBR.player.getColor(),
+      role: await OBR.player.getRole(),
+    };
+
+    OBR.broadcast.sendMessage("justdices.dice-roll", { sender: sender, user: user, text: text }, { destination: 'ALL' });
+  })();
+
 }

@@ -169,7 +169,7 @@ button:hover {
 
 .card {
     padding: 1em;
-    border: 1px solid white;
+    border: 1px solid;
     border-left: 8px solid;
     margin: 0.5em;
     border-radius: 8px;
@@ -205,13 +205,15 @@ button:hover {
     flex-grow: 1;
 }
 
-.public-roll {}
+.public-roll {
+    border-color: #ffffff;
+    color: #ffffff;
+}
 
 .hidden-roll {
     border-color: #8f8f8f;
     color: #8f8f8f;
 }
-
 
 .reroll-button {
     display: flex;
