@@ -399,3 +399,12 @@ button:focus-visible {
     cursor: pointer;
     color: inherit;
 }
+
+#resizer {
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  right: 2px;
+  bottom: 5px;
+  cursor: se-resize;
+}

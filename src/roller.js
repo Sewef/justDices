@@ -2,7 +2,6 @@ import OBR from "@owlbear-rodeo/sdk";
 import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
 
-
 async function setupQuickDice() {
   const toggleDicePanelBtn = document.getElementById('toggleDicePanel');
   const dicePanel = document.getElementById('dicePanel');
@@ -46,9 +45,55 @@ async function setupQuickDice() {
     });
   });
 }
+
+let isResizing = false;
+let startX, startY;
+let startWidth, startHeight;
+
+async function setupResizer() {
+  const resizer = document.getElementById("resizer");
+
+  resizer.addEventListener("pointerdown", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    isResizing = true;
+    document.body.style.cursor = "se-resize";
+    resizer.setPointerCapture(e.pointerId); // ✅ capturer même hors iframe
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    startWidth = await OBR.action.getWidth();
+    startHeight = await OBR.action.getHeight();
+  });
+
+  resizer.addEventListener("pointermove", async (e) => {
+    if (!isResizing) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    const newWidth = Math.max(550, startWidth + dx);
+    const newHeight = Math.max(400, startHeight + dy);
+
+    await OBR.action.setWidth(newWidth);
+    await OBR.action.setHeight(newHeight);
+  });
+
+  resizer.addEventListener("pointerup", (e) => {
+    isResizing = false;
+    document.body.style.cursor = "";
+    resizer.releasePointerCapture(e.pointerId); // ✅ proprement relâcher
+  });
+}
+
+
 // SETUP
 export function setupDiceRoller(playerName) {
   setupQuickDice();
+  setupResizer();
+
   console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
   // console.log("Connection ID:", OBR.player.id);
 

@@ -63,6 +63,10 @@ document.querySelector('#app').innerHTML = `
     </div>
     ${createDiceTable()}
   </div>
+
+  <div id="resizer">
+◢
+  </div>
 `;
 
 OBR.onReady(() => OBR.player.getName().then((playerName) => {
