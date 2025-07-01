@@ -11,6 +11,7 @@ const diceTypes = [
   { label: "d12", value: "d12" },
   { label: "d20", value: "d20" },
   { label: "d100", value: "d100" },
+  { label: "d1000", value: "d1000" },
   { label: "dF", value: "dF" }
 ];
 
