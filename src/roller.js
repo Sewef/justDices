@@ -74,8 +74,8 @@ async function setupResizer() {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    const newWidth = Math.max(550, startWidth + dx);
-    const newHeight = Math.max(400, startHeight + dy);
+    const newWidth = Math.max(100, startWidth + dx);
+    const newHeight = Math.max(100, startHeight + dy);
 
     await OBR.action.setWidth(newWidth);
     await OBR.action.setHeight(newHeight);

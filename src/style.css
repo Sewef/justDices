@@ -81,22 +81,22 @@ h1 {
     flex: 1 1 auto;
     max-width: 100%;
     min-width: 0;
-    /* 👈 Important pour éviter les débordements */
 }
 
 
 #inputField {
-    flex: 1;
-    min-width: 0;
-    font-size: 1.2em;
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-family: inherit;
-    box-sizing: border-box;
-    height: 36px;
-    outline-offset: 2px;
-    transition: border-color 0.2s;
+  flex: 1 1 0px;
+  min-width: 0;
+  max-width: 100%;
+  width: 1%;
+  font-size: 1em;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  height: 36px;
+  outline-offset: 2px;
+  transition: border-color 0.2s;
 }
 
 @keyframes text-shake {
