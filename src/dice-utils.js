@@ -120,7 +120,7 @@ export async function rollExpression(text) {
         return tok;
     });
     const exprExpanded = expandedTokens.join(" ");
-    console.log("Expression développée :", exprExpanded);
+    // console.log("Expression développée :", exprExpanded);
     // ────────────────────────────────────────────────────────────────────────
 
     const numericTokens = [];
@@ -203,8 +203,8 @@ export async function rollExpression(text) {
     // 4. Reconstruction
     const exprDetailed = detailedTokens.join(" ");
     const exprNumeric = numericTokens.join(" ");
-    console.log("Expression détaillée :", exprDetailed);
-    console.log("Expression numérique :", exprNumeric);
+    // console.log("Expression détaillée :", exprDetailed);
+    // console.log("Expression numérique :", exprNumeric);
 
     // 5. Évaluation safe + tronquage
     let total;
