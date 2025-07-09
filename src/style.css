@@ -409,3 +409,15 @@ button:focus-visible {
   cursor: se-resize;
   border-radius: 4px;
 }
+/* Zones de resize de 16×16px en coin */
+.resize-handle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    z-index: 1000;
+  }
+  .resize-handle.nw { top: 0; left: 0; cursor: nwse-resize; }
+  .resize-handle.ne { top: 0; right: 0; cursor: nesw-resize; }
+  .resize-handle.sw { bottom: 0; left: 0; cursor: nesw-resize; }
+  .resize-handle.se { bottom: 0; right: 0; cursor: nwse-resize; }

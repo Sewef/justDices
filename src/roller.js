@@ -47,47 +47,65 @@ async function setupQuickDice() {
 }
 
 let isResizing = false;
-let startX, startY;
-let startWidth, startHeight;
+let dirActive = null;
+let startX, startY, startW, startH;
 
 async function setupResizer() {
-  const resizer = document.getElementById("resizer");
+  const panel = document.querySelector('#app');
+  const dirs = ['nw','ne','sw','se'];
+  console.log("Setting up resizer for dice panel...");
 
-  resizer.addEventListener("pointerdown", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  dirs.forEach(dir => {
+    const h = document.createElement('div');
+    h.classList.add('resize-handle', dir);
+    panel.appendChild(h);
+    console.log(`Resize handle added for direction: ${dir}`, h);
 
-    isResizing = true;
-    document.body.style.cursor = "se-resize";
-    resizer.setPointerCapture(e.pointerId); // ✅ capturer même hors iframe
+    h.addEventListener('pointerdown', async e => {
+      console.log(`Resizing started in direction: ${dir}`);
+      e.preventDefault();
+      e.stopPropagation();
+      isResizing = true;
+      dirActive = dir;
+      startX = e.clientX;
+      startY = e.clientY;
+      startW = await OBR.action.getWidth();
+      startH = await OBR.action.getHeight();
+      document.body.style.cursor = getCursorFor(dir);
+      h.setPointerCapture(e.pointerId);
+      h.addEventListener('pointermove', onPointerMove, { passive: false });
+      h.addEventListener('pointerup', onPointerUp, { passive: false });
+    }, { passive: false });
 
-    startX = e.clientX;
-    startY = e.clientY;
+    const onPointerMove = async e => {
+      if (!isResizing || dirActive !== dir) return;
+      e.preventDefault();
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      let newW = startW + (dir.includes('e') ? dx : -dx);
+      let newH = startH + (dir.includes('s') ? dy : -dy);
+      newW = Math.max(100, newW);
+      newH = Math.max(100, newH);
+      await OBR.action.setWidth(newW);
+      await OBR.action.setHeight(newH);
+    };
 
-    startWidth = await OBR.action.getWidth();
-    startHeight = await OBR.action.getHeight();
-  });
-
-  resizer.addEventListener("pointermove", async (e) => {
-    if (!isResizing) return;
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    const newWidth = Math.max(100, startWidth + dx);
-    const newHeight = Math.max(100, startHeight + dy);
-
-    await OBR.action.setWidth(newWidth);
-    await OBR.action.setHeight(newHeight);
-  });
-
-  resizer.addEventListener("pointerup", (e) => {
-    isResizing = false;
-    document.body.style.cursor = "";
-    resizer.releasePointerCapture(e.pointerId); // ✅ proprement relâcher
+    const onPointerUp = e => {
+      if (!isResizing || dirActive !== dir) return;
+      e.preventDefault();
+      isResizing = false;
+      dirActive = null;
+      document.body.style.cursor = '';
+      h.releasePointerCapture(e.pointerId);
+      h.removeEventListener('pointermove', onPointerMove);
+      h.removeEventListener('pointerup', onPointerUp);
+    };
   });
 }
 
+function getCursorFor(dir) {
+  return (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
+}
 
 // SETUP
 export function setupDiceRoller(playerName) {
