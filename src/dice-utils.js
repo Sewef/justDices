@@ -22,10 +22,17 @@ export async function parseInput(text) {
         return null;
     }
 
-    // Validation détaillée : découpage en tokens par + ou -
-    const tokens = rollExpression.split(/[\+\-]/).map(t => t.trim());
+    // Validation détaillée : on extrait TOUTES les parties
+    const tokens = rollExpression.match(
+        /(\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|[\+\-\*\/\(\)])/gi
+    );
+    if (!tokens) {
+        console.error("Impossible de découper l'expression :", rollExpression);
+        return null;
+    }
 
-    const validTokenRegex = /^(\d*d\d+|\d*db\d+|\d*dF(udge)?|\d+)$/i;
+    // On accepte aussi *, /, (, ), et les constantes décimales
+    const validTokenRegex = /^(\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|[\+\-\*\/\(\)])$/i;
     // - \d*d\d+ : dés classiques (ex: d6, 3d20)
     // - \d*db\d+ : dés spéciaux de bonus (ex: db14)
     // - \d*dF(udge)? : dés Fudge (ex: dF, 4dF, 2dFudge)
@@ -44,151 +51,180 @@ export async function parseInput(text) {
     };
 }
 
+// Handle keywords and special cases
+const DBKeyword = [
+    { key: "db28", value: "8d12+80" },
+    { key: "db27", value: "8d12+70" },
+    { key: "db26", value: "7d12+65" },
+    { key: "db25", value: "6d12+60" },
+    { key: "db24", value: "6d12+55" },
+    { key: "db23", value: "6d12+50" },
+    { key: "db22", value: "6d12+45" },
+    { key: "db21", value: "6d12+40" },
+    { key: "db20", value: "6d12+35" },
+    { key: "db19", value: "6d12+30" },
+    { key: "db18", value: "6d12+25" },
+    { key: "db17", value: "5d12+25" },
+    { key: "db16", value: "5d10+20" },
+    { key: "db15", value: "4d10+20" },
+    { key: "db14", value: "4d10+15" },
+    { key: "db13", value: "4d10+10" },
+    { key: "db12", value: "3d12+10" },
+    { key: "db11", value: "3d10+10" },
+    { key: "db10", value: "3d8+10" },
+    { key: "db9", value: "2d10+10" },
+    { key: "db8", value: "2d8+10" },
+    { key: "db7", value: "2d6+10" },
+    { key: "db6", value: "2d6+8" },
+    { key: "db5", value: "1d8+8" },
+    { key: "db4", value: "1d8+6" },
+    { key: "db3", value: "1d6+5" },
+    { key: "db2", value: "1d6+3" },
+    { key: "db1", value: "1d6+1" }
+];
 
+// dice-utils.js
 
 export async function rollExpression(text) {
-    // console.log(`Rolling expression: ${text}`);
-    let expression = text.toLowerCase().replaceAll(" ", "").trim();
+    // 1. Nettoyage minimal (on garde les espaces entre tokens pour faciliter le split)
+    const raw = text.toLowerCase().trim();
 
-    // Expand multiplier-based keywords like "2db4"
-    expression = expression.replace(/(\d+)db(\d+)/g, (_, multiplier, dbLevel) => {
-        return Array.from({ length: parseInt(multiplier) }, () => `db${dbLevel}`).join(' + ');
-    });
-
-    // Handle keywords and special cases
-    const DBKeyword = [
-        { key: "db28", value: "8d12+80" },
-        { key: "db27", value: "8d12+70" },
-        { key: "db26", value: "7d12+65" },
-        { key: "db25", value: "6d12+60" },
-        { key: "db24", value: "6d12+55" },
-        { key: "db23", value: "6d12+50" },
-        { key: "db22", value: "6d12+45" },
-        { key: "db21", value: "6d12+40" },
-        { key: "db20", value: "6d12+35" },
-        { key: "db19", value: "6d12+30" },
-        { key: "db18", value: "6d12+25" },
-        { key: "db17", value: "5d12+25" },
-        { key: "db16", value: "5d10+20" },
-        { key: "db15", value: "4d10+20" },
-        { key: "db14", value: "4d10+15" },
-        { key: "db13", value: "4d10+10" },
-        { key: "db12", value: "3d12+10" },
-        { key: "db11", value: "3d10+10" },
-        { key: "db10", value: "3d8+10" },
-        { key: "db9", value: "2d10+10" },
-        { key: "db8", value: "2d8+10" },
-        { key: "db7", value: "2d6+10" },
-        { key: "db6", value: "2d6+8" },
-        { key: "db5", value: "1d8+8" },
-        { key: "db4", value: "1d8+6" },
-        { key: "db3", value: "1d6+5" },
-        { key: "db2", value: "1d6+3" },
-        { key: "db1", value: "1d6+1" }
-    ];
-
-    DBKeyword.forEach(({ key, value }) => {
-        expression = expression.replaceAll(key, value);
-    });
-
-    // console.log(`Final roll expression: ${expression}`);
-
-    const rolls = [];
-    // Split expression into parts, keeping the operators
-    const rollParts = [];
-    let regex = /([+-]?[^+-]+)/g;
-    let match;
-    while ((match = regex.exec(expression)) !== null) {
-        rollParts.push(match[0].trim());
+    // 2. Tokenisation en dés, nombres, opérateurs et parenthèses
+    const tokenRegex = /(\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|[\+\-\*\/\(\)])/gi;
+    const tokens = raw.match(tokenRegex);
+    if (!tokens) {
+        console.error("Impossible de tokeniser l'expression :", raw);
+        return null;
     }
-    for (const partWithOp of rollParts) {
-        let operator = 1;
-        let part = partWithOp;
-        if (part.startsWith('+')) {
-            part = part.slice(1);
-        } else if (part.startsWith('-')) {
-            operator = -1;
-            part = part.slice(1);
+
+    // ────────────────────────────────────────────────────────────────────────
+    // 3. Construire exprExpanded : on remplace les dbN par leur entry.value
+    const expandedTokens = tokens.map(tok => {
+        const m = tok.match(/^(\d*)db(\d+)$/i);
+        if (m) {
+            // trouve la définition dans DBKeyword
+            const key = `db${m[2]}`.toLowerCase();
+            const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
+            if (!entry) {
+                console.warn(`Définition manquante pour ${key}`);
+                return tok;
+            }
+            // si on a un multiplicateur devant (ex "2db4"), on le préserve :
+            const count = parseInt(m[1], 10) || 1;
+            const def = entry.value;        // ex "1d8+6"
+            return count > 1
+                ? Array(count).fill(def).join(" + ")
+                : def;
         }
-        part = part.trim();
+        // sinon, on garde le token tel quel
+        return tok;
+    });
+    const exprExpanded = expandedTokens.join(" ");
+    console.log("Expression développée :", exprExpanded);
+    // ────────────────────────────────────────────────────────────────────────
 
-        // 🎲 Gestion des dés Fudge
-        if (part.match(/^(\d*)dF(udge)?$/i)) {
-            const matchFudge = part.match(/^(\d*)dF(udge)?$/i);
-            const numDice = parseInt(matchFudge[1]) || 4; // par défaut 4 dés Fudge
-            const rollResults = [];
+    const numericTokens = [];
+    const detailedTokens = [];
 
-            for (let i = 0; i < numDice; i++) {
-                const val = [-1, 0, 1][Math.floor(Math.random() * 3)] * operator;
-                rollResults.push({ value: val, type: "fudge" });
+    // 3. Parcours de chaque token
+    for (let tok of tokens) {
+        // 3a) dbN  → on regarde dans DBKeyword pour retrouver le "value"
+        let m;
+        if (m = tok.match(/^(\d*)db(\d+)$/i)) {
+            const count = parseInt(m[1], 10) || 1;
+            const key = `db${m[2]}`.toLowerCase();
+
+            // 1) Trouve la définition dans DBKeyword
+            const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
+            if (!entry) {
+                // Pas trouvé => on skip ou on log une erreur
+                console.error(`Définiton manquante pour ${key}`);
+                continue;
             }
 
-            rolls.push({
-                expression: (operator === -1 ? '-' : '') + part,
-                results: rollResults,
-                total: rollResults.reduce((sum, r) => sum + r.value, 0)
-            });
+            // 2) On a entry.value par exemple "1d6+4"
+            //    On peut la re-tokeniser pour extraire dé et bonus
+            const [, diceExpr, bonusStr] = entry.value.match(/^(\d*d\d+)\s*\+\s*(\d+)$/i);
+            const bonus = parseInt(bonusStr, 10);
+
+            // 3) Pour 'count' répétitions, on refait 'count' fois « diceExpr »
+            let sumNumeric = 0;
+            const detailedParts = [];
+            for (let i = 0; i < count; i++) {
+                // Lance le diceExpr, qui est du type "1d6" ou "2d8" etc.
+                const [n, sides] = diceExpr.split("d").map(Number);
+                const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * sides) + 1);
+                const subSum = rolls.reduce((a, b) => a + b, 0);
+                sumNumeric += subSum;
+                detailedParts.push(`[ ${rolls.join(", ")} ]`);
+            }
+            // ajoute aussi le bonus 'count' fois
+            sumNumeric += bonus * count;
+
+            // 4) Alimente vos tableaux
+            //    - pour le détail, on injecte d’abord chacun des jets, puis + bonus
+            detailedTokens.push(
+                ...detailedParts,
+                ...Array(count).fill(`+ ${bonus}`)
+            );
+            //    - pour le numérico, juste la somme globale de ce token
+            numericTokens.push(`${sumNumeric}`);
 
             continue;
         }
 
-        // 🎲 Gestion classique des dés (NdX)
-        const matchDice = part.match(/(\d*)d(\d+)/);
-        if (matchDice) {
-            const numDice = parseInt(matchDice[1]) || 1;
-            const dieSize = parseInt(matchDice[2]);
-            const rollResults = [];
 
-            for (let i = 0; i < numDice; i++) {
-                const roll = (Math.floor(Math.random() * dieSize) + 1) * operator;
-                let type = "normal";
-                if (Math.abs(roll) === 1) type = "min";
-                else if (Math.abs(roll) === dieSize) type = "max";
-                rollResults.push({ value: roll, type });
-            }
-
-            rolls.push({
-                expression: (operator === -1 ? '-' : '') + part,
-                results: rollResults,
-                total: rollResults.reduce((sum, roll) => sum + roll.value, 0)
-            });
-        } else {
-            // 🎯 Constantes
-            let total = (parseInt(part) || 0) * operator;
-
-            rolls.push({
-                expression: (operator === -1 ? '-' : '') + part,
-                results: [{ value: total, type: "normal" }],
-                total: total
-            });
+        // 3b) dFudge
+        if (m = tok.match(/^(\d*)dF(?:udge)?$/i)) {
+            const count = parseInt(m[1], 10) || 4;
+            const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
+            const sum = rolls.reduce((a, b) => a + b, 0);
+            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            numericTokens.push(`${sum}`);
+            continue;
         }
+
+        // 3c) NdX
+        if (m = tok.match(/^(\d*)d(\d+)$/i)) {
+            const count = parseInt(m[1], 10) || 1;
+            const faces = parseInt(m[2], 10);
+            const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * faces) + 1);
+            const sum = rolls.reduce((a, b) => a + b, 0);
+            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            numericTokens.push(`${sum}`);
+            continue;
+        }
+
+        // 3d) tout le reste (nombres, + - * / ou parenthèses)
+        detailedTokens.push(tok);
+        numericTokens.push(tok);
     }
 
-    const totalRoll = rolls.reduce((sum, roll) => sum + roll.total, 0);
-    // console.log(`Roll results:`, rolls);
+    // 4. Reconstruction
+    const exprDetailed = detailedTokens.join(" ");
+    const exprNumeric = numericTokens.join(" ");
+    console.log("Expression détaillée :", exprDetailed);
+    console.log("Expression numérique :", exprNumeric);
 
-    let rollText = rolls.map(roll => {
-        const formatted = roll.results.map(res => {
-            if (res.type === "fudge") {
-                if (res.value === 1) return `<span class="fudge-plus">+1</span>`;
-                if (res.value === 0) return `<span class="fudge-zero">0</span>`;
-                if (res.value === -1) return `<span class="fudge-minus">−1</span>`;
-            }
-            if (res.type === "min") return `<span class="min">${res.value}</span>`;
-            if (res.type === "max") return `<span class="max">${res.value}</span>`;
-            return `${res.value}`;
-        }).join(', ');
-        return `[ ${formatted} ]`;
-    }).join(' + ');
-
-
-    // console.log(`Roll breakdown: ${rollText}`);
-    // console.log(`Total roll: ${totalRoll}`);
+    // 5. Évaluation safe + tronquage
+    let total;
+    try {
+        total = Function(`"use strict";return(${exprNumeric});`)();
+        total = Number(total.toPrecision(12));
+    } catch (e) {
+        console.error("Erreur d'évaluation :", exprNumeric, e);
+        return null;
+    }
 
     return {
-        expression: expression,
-        rolls: rollText,
-        total: totalRoll
+        expression: exprExpanded,
+        rolls: exprDetailed,
+        total: total
     };
 }
+
+
+
+
+
 

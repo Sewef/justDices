@@ -52,7 +52,7 @@ let startX, startY, startW, startH;
 
 async function setupResizer() {
   const panel = document.querySelector('#app');
-  const dirs = ['nw','ne','sw','se'];
+  const dirs = ['nw', 'ne', 'sw', 'se'];
   console.log("Setting up resizer for dice panel...");
 
   dirs.forEach(dir => {
@@ -161,39 +161,45 @@ export function setupDiceRoller(playerName) {
 
 // INPUT WORKFLOW
 async function submitInput(text) {
-  // console.log(text);
-
-  // Parse input to get Roll Expression
-  let parsedInput = await parseInput(text);
+  // 1. Parse l’input pour extraire l’expression
+  const parsedInput = await parseInput(text);
   if (!parsedInput) {
     console.error("Failed to parse input.");
-
     const inputField = document.getElementById("inputField");
     inputField.classList.add("input-error-text", "input-error-outline");
     setTimeout(() => {
       inputField.classList.remove("input-error-text", "input-error-outline");
     }, 1000);
-
     return;
   }
 
-  // console.log(parsedInput);
-
-  // Roll the dice using the parsed expression
+  // 2. Lance les dés en passant parsedInput.rollExpression
   const rollResult = await rollExpression(parsedInput.rollExpression);
+  if (!rollResult) {
+    console.error("rollExpression returned null.");
+    return;
+  }
 
+  // 3. Construit l’objet de résultat en utilisant exprDetailed / exprNumeric
   const resultStr = {
+    // Affiche l’input original, puis l’expression numérique entre parenthèses
     expression: `${text} (${rollResult.expression})`,
+    // Dans 'rolls', on met le détail formaté
     rolls: rollResult.rolls,
     total: rollResult.total,
     hidden: parsedInput.hidden
   };
 
-  // now everything is broadcasted then shown if necessary
-  await broadcastLogEntry(await OBR.player.getName(), resultStr);
+  // 4. Envoie au log (et au GM si hidden)
+  await broadcastLogEntry(
+    await OBR.player.getName(),
+    resultStr
+  );
 
-  document.getElementById("inputField").value = ""; // Clear the input field
+  // 5. Vide le champ
+  document.getElementById("inputField").value = "";
 }
+
 
 // LOGGING
 async function addLogEntry(eventData) {
