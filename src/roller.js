@@ -29,7 +29,7 @@ async function setupQuickDice() {
   toggleHiddenRollsBtn.addEventListener('click', () => {
     hideRollsFromQuickPanel = !hideRollsFromQuickPanel;
     toggleHiddenRollsBtn.textContent = hideRollsFromQuickPanel ? '🙈' : '🐵';
-    console.log(`Hide rolls from quick panel: ${hideRollsFromQuickPanel}`);
+    // console.log(`Hide rolls from quick panel: ${hideRollsFromQuickPanel}`);
   });
 
   // Gestion des clics sur les boutons de dés dans le tableau
@@ -53,16 +53,16 @@ let startX, startY, startW, startH;
 async function setupResizer() {
   const panel = document.querySelector('#app');
   const dirs = ['nw', 'ne', 'sw', 'se'];
-  console.log("Setting up resizer for dice panel...");
+  // console.log("Setting up resizer for dice panel...");
 
   dirs.forEach(dir => {
     const h = document.createElement('div');
     h.classList.add('resize-handle', dir);
     panel.appendChild(h);
-    console.log(`Resize handle added for direction: ${dir}`, h);
+    // console.log(`Resize handle added for direction: ${dir}`, h);
 
     h.addEventListener('pointerdown', async e => {
-      console.log(`Resizing started in direction: ${dir}`);
+      // console.log(`Resizing started in direction: ${dir}`);
       e.preventDefault();
       e.stopPropagation();
       isResizing = true;
