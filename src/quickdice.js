@@ -15,7 +15,6 @@ export async function toggleDicePanel() {
 
     console.log("JustDices: Opening dice panel");
     const anchor = document.getElementById("justdicesApp");
-    const initialPosition = { left: 600, top: 300 };
     OBR.popover.open({
         id: "justdices.quickdice",
         url: "/quickdice.html",
@@ -23,8 +22,8 @@ export async function toggleDicePanel() {
         width: 200,
         disableClickAway: true,
         hidePaper: true,
-        anchorPosition: initialPosition,
-        anchorReference: "POSITION", // très important
+        anchorReference: "ELEMENT",
+        anchorElementId: "grid-button",
     });
     await OBR.player.setMetadata({ "justdices.dicePanelOpen": true });
 }
