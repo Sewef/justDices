@@ -7,14 +7,12 @@
     <style>
         body {
             font-family: sans-serif;
-            padding: 20px;
-        }
 
+            background-color: rgba(30, 34, 49, 0.6);
+        }
 
         #dicePanel {
             position: fixed;
-            bottom: 1rem;
-            right: 1rem;
             width: auto;
             max-width: 90vw;
             /* Limite la largeur à 90% de la fenêtre */
@@ -22,12 +20,9 @@
             overflow-x: hidden;
 
             color: white;
-            padding: 1em;
             border-radius: 10px;
             z-index: 9999;
-
             display: grid;
-            /*grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));*/
             gap: 0.25em;
             font-size: 0.85em;
         }
@@ -36,7 +31,6 @@
         .dice-row {
             grid-column: 1 / -1;
             font-weight: bold;
-            margin-top: 0.5em;
             padding-bottom: 0.2em;
             border-bottom: 1px solid #444;
         }
@@ -51,6 +45,14 @@
             padding: 0.3em 0.5em;
             font-size: 0.9em;
             transition: background-color 0.2s ease;
+        }
+
+        .dice-table button:hover {
+            background: #555;
+        }
+
+        .dice-table th {
+            text-align: right;
         }
 
 
@@ -96,7 +98,7 @@
 <body>
     <div id="dicePanel" class="dice-panel">
         <div class="panel-header">
-            <h3>Quick Dice Rolls</h3>
+            <h3>Quick Rolls</h3>
             <div class="panel-controls">
                 <button id="toggleHiddenRolls" title="Toggle hide rolls" aria-label="Toggle hide rolls">🐵</button>
                 <button id="closeDicePanel" aria-label="Close panel">✖</button>

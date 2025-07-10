@@ -15,73 +15,83 @@ export async function toggleDicePanel() {
 
     console.log("JustDices: Opening dice panel");
     const anchor = document.getElementById("justdicesApp");
+    const initialPosition = { left: 600, top: 300 };
     OBR.popover.open({
         id: "justdices.quickdice",
         url: "/quickdice.html",
         height: 300,
-        width: 250,
-        anchorElementId: "justdicesApp",
+        width: 200,
         disableClickAway: true,
-        //anchorOrigin: {vertical: "BOTTOM", horizontal: "RIGHT"},
+        hidePaper: true,
+        anchorPosition: initialPosition,
+        anchorReference: "POSITION", // très important
     });
     await OBR.player.setMetadata({ "justdices.dicePanelOpen": true });
 }
 
-let isQuickDiceSetupDone = false; // Flag to track if setupQuickDice has been run
+let isQuickDiceSetupDone = false;
+let hideRollsFromQuickPanel = false;
 
 export async function setupQuickDice() {
-    if (isQuickDiceSetupDone) {
-        return;
-    }
+    if (isQuickDiceSetupDone) return;
+
     await new Promise(resolve => {
         const checkExist = setInterval(() => {
             const diceTable = document.getElementById("dice-table");
-            if (diceTable) {
+            const dicePanel = document.getElementById("dicePanel");
+            const closeDicePanelBtn = document.getElementById("closeDicePanel");
+            const toggleHiddenRollsBtn = document.getElementById("toggleHiddenRolls");
+
+            if (diceTable && dicePanel && closeDicePanelBtn && toggleHiddenRollsBtn) {
                 clearInterval(checkExist);
                 resolve();
             }
         }, 100);
     });
-    document.getElementById("dice-table").innerHTML = await createDiceTable();
 
-    const dicePanel = document.getElementById('dicePanel');
-    const closeDicePanelBtn = document.getElementById('closeDicePanel');
-    const toggleHiddenRollsBtn = document.getElementById('toggleHiddenRolls');
+    // ✅ tous les éléments sont garantis présents ici
+    const diceTable = document.getElementById("dice-table");
+    const dicePanel = document.getElementById("dicePanel");
+    const closeDicePanelBtn = document.getElementById("closeDicePanel");
+    const toggleHiddenRollsBtn = document.getElementById("toggleHiddenRolls");
 
-    let hideRollsFromQuickPanel = false;
+    diceTable.innerHTML = await createDiceTable();
 
     if (!closeDicePanelBtn.dataset.listenerAdded) {
         closeDicePanelBtn.addEventListener('click', () => {
             console.log("JustDices: Closing dice panel from button");
             toggleDicePanel();
-            return;
         });
         closeDicePanelBtn.dataset.listenerAdded = "true";
     }
 
     if (!toggleHiddenRollsBtn.dataset.listenerAdded) {
-        toggleHiddenRollsBtn.addEventListener('click', () => {
-            hideRollsFromQuickPanel = !hideRollsFromQuickPanel;
+        toggleHiddenRollsBtn.addEventListener('click', async () => {
+            
+            const metadata = await OBR.player.getMetadata();
+            const hideRollsFromQuickPanel = !(metadata["justdices.hideRollsFromQuickPanel"]);
+            await OBR.player.setMetadata({ "justdices.hideRollsFromQuickPanel": hideRollsFromQuickPanel });
             toggleHiddenRollsBtn.textContent = hideRollsFromQuickPanel ? '🙈' : '🐵';
-            return;
         });
         toggleHiddenRollsBtn.dataset.listenerAdded = "true";
     }
 
-    // Gestion des clics sur les boutons de dés dans le tableau
     dicePanel.querySelectorAll('.dice-table button').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const dice = btn.getAttribute('data-dice');
             const count = parseInt(btn.getAttribute('data-count'), 10);
             if (!dice || !count || count < 1) return;
-            console.log(toggleHiddenRollsBtn.textContent);
 
-            const rollCommand = (toggleHiddenRollsBtn.textContent == '🙈') ? `/gr ${count}${dice}` : `/r ${count}${dice}`;
+            const metadata = await OBR.player.getMetadata();
+            let hideRollsFromQuickPanel = metadata["justdices.hideRollsFromQuickPanel"] === true;
+            const rollCommand = hideRollsFromQuickPanel ? `/gr ${count}${dice}` : `/r ${count}${dice}`;
             submitInput(rollCommand);
         });
     });
+
     isQuickDiceSetupDone = true;
 }
+
 
 const diceTypes = [
     { label: "d4", value: "d4" },
