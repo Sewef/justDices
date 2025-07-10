@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
+import { toggleDicePanel } from "./quickdice.js";
 
 async function setupQuickDice() {
   const toggleDicePanelBtn = document.getElementById('toggleDicePanel');
@@ -109,7 +110,11 @@ function getCursorFor(dir) {
 
 // SETUP
 export function setupDiceRoller(playerName) {
-  setupQuickDice();
+  
+  document.getElementById('toggleDicePanel').addEventListener('click', () => {
+    toggleDicePanel();
+  });
+
   setupResizer();
 
   console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
@@ -136,6 +141,7 @@ export function setupDiceRoller(playerName) {
       command = "/r " + command;
     }
     await submitInput(command);
+    document.getElementById("inputField").value = "";
   });
 
   OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
@@ -160,7 +166,7 @@ export function setupDiceRoller(playerName) {
 }
 
 // INPUT WORKFLOW
-async function submitInput(text) {
+export async function submitInput(text) {
   // 1. Parse l’input pour extraire l’expression
   const parsedInput = await parseInput(text);
   if (!parsedInput) {
@@ -195,9 +201,6 @@ async function submitInput(text) {
     await OBR.player.getName(),
     resultStr
   );
-
-  // 5. Vide le champ
-  document.getElementById("inputField").value = "";
 }
 
 
