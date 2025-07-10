@@ -3,9 +3,7 @@
     line-height: 1.5;
     font-weight: 400;
 
-    color-scheme: light dark;
     color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -52,7 +50,6 @@ h1 {
     gap: 0.5em;
     margin-bottom: 1em;
     flex-wrap: wrap;
-    /* 👈 Permet de passer à la ligne si besoin */
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
@@ -173,6 +170,7 @@ button:hover {
     border-left: 8px solid;
     margin: 0.5em;
     border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 #logCards .card span.log.user {
