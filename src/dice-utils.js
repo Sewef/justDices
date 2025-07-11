@@ -1,3 +1,5 @@
+import { evaluate } from "mathjs";
+
 
 // INPUT PARSING
 export async function parseInput(text) {
@@ -209,10 +211,10 @@ export async function rollExpression(text) {
     // 5. Évaluation safe + tronquage
     let total;
     try {
-        total = Function(`"use strict";return(${exprNumeric});`)();
-        total = Number(total.toPrecision(12));
+        total = evaluate(exprNumeric);
+        total = Number(total.toPrecision(12)); // pour garder le même arrondi
     } catch (e) {
-        console.error("Erreur d'évaluation :", exprNumeric, e);
+        console.error("Erreur d'évaluation mathjs :", exprNumeric, e);
         return null;
     }
 
