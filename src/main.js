@@ -7,7 +7,7 @@ document.querySelector('#app').innerHTML = `
   <div id="inputRow">
     <form id="input">
       <div class="input-group">
-        <input type="text" id="inputField" placeholder="1d8+6..." />
+        <input type="text" id="inputField" placeholder="1d8+6..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
         <button type="button" id="hiddenRollButton" title="Hidden roll" aria-label="Hidden roll">🙈</button>
         <button type="button" id="rollButton" title="Roll it" aria-label="Roll it">⚔️</button>
         <button type="submit" style="display: none;"></button>
