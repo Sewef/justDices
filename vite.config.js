@@ -7,4 +7,5 @@ export default defineConfig({
       origin: "https://www.owlbear.rodeo",
     },
   },
+  base: '/',
 });
