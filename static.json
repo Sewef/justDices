@@ -1,5 +1,0 @@
-{
-  "routes": [
-    { "src": "/src/(.*)", "headers": { "Content-Type": "application/javascript" } }
-  ]
-}
