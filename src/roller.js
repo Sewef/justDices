@@ -3,6 +3,9 @@ import { parseInput } from './dice-utils.js';
 import { rollExpression } from './dice-utils.js';
 import { toggleDicePanel } from "./quickdice.js";
 
+const minPanelWidth = 350;
+const minPanelHeight = 200;
+
 const inputHistory = [];
 let historyIndex = -1;
 
@@ -44,8 +47,8 @@ async function setupResizer() {
       const dy = e.clientY - startY;
       let newW = startW + (dir.includes('e') ? dx : -dx);
       let newH = startH + (dir.includes('s') ? dy : -dy);
-      newW = Math.max(100, newW);
-      newH = Math.max(100, newH);
+      newW = Math.max(minPanelWidth, newW);
+      newH = Math.max(minPanelHeight, newH);
       await OBR.action.setWidth(newW);
       await OBR.action.setHeight(newH);
     };
