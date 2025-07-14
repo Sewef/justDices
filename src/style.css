@@ -29,6 +29,7 @@ body {
     display: flex;
     place-items: center;
     min-width: 320px;
+    overflow-x: hidden;
 }
 
 h1 {
@@ -279,7 +280,6 @@ button:hover {
     text-overflow: ellipsis;
     white-space: normal;
     position: relative;
-    cursor: help;
     max-height: 3.3em; /* environ 2 lignes */
     transition: max-height 0.3s ease;
     content-visibility: auto;
