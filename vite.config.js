@@ -1,11 +1,19 @@
 import { defineConfig } from "vite";
+import { resolve } from "path";
 
-// https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   server: {
     cors: {
       origin: "https://www.owlbear.rodeo",
     },
   },
-  base: '/',
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, "index.html"),
+        quickdice: resolve(__dirname, "quickdice.html")
+      }
+    }
+  }
 });
