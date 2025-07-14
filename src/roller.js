@@ -72,7 +72,7 @@ function getCursorFor(dir) {
 
 // SETUP
 export function setupDiceRoller(playerName) {
-  
+
   document.getElementById('toggleDicePanel').addEventListener('click', () => {
     toggleDicePanel();
   });
@@ -192,7 +192,6 @@ export async function submitInput(text) {
   );
 }
 
-
 // LOGGING
 async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
@@ -217,7 +216,11 @@ async function addLogEntry(eventData) {
           ${eventData.text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
           ${eventData.sender.name}:
         </span> ${eventData.text.expression}<br>
-        <span class="log result">${eventData.text.rolls}</span> = 
+        <span class="log result truncated">
+          <span class="rolls-content">${eventData.text.rolls}</span>
+        </span>
+
+ = 
         <span class="log total">${eventData.text.total}</span>
       </div>
       <button class="reroll-button" data-command="${originalCommand}" title="Reroll">
@@ -227,6 +230,25 @@ async function addLogEntry(eventData) {
   `;
 
   logCards.insertBefore(newEntry, logCards.firstChild);
+
+  const resultSpan = newEntry.querySelector(".log.result");
+  const contentSpan = resultSpan.querySelector(".rolls-content");
+
+  requestAnimationFrame(() => {
+    const isOverflowing = contentSpan.scrollHeight > contentSpan.clientHeight + 2;
+
+    if (isOverflowing) {
+      const btn = document.createElement("button");
+      btn.className = "expand-rolls";
+      btn.textContent = "▼";
+      btn.addEventListener("click", () => {
+        resultSpan.classList.toggle("expanded");
+        btn.textContent = resultSpan.classList.contains("expanded") ? "▲" : "▼";
+      });
+      resultSpan.appendChild(btn);
+    }
+  });
+
 
   const rerollBtn = newEntry.querySelector(".reroll-button");
   if (rerollBtn) {

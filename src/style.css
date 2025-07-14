@@ -20,6 +20,7 @@ a {
     color: #646cff;
     text-decoration: inherit;
 }
+
 a:hover {
     color: #535bf2;
 }
@@ -47,15 +48,15 @@ h1 {
 }
 
 #inputRow {
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.3em;
-  margin-bottom: 0.5em;
-  box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3em;
+    margin-bottom: 0.5em;
+    box-sizing: border-box;
 }
 
 
@@ -76,36 +77,42 @@ h1 {
 }
 
 .input-group {
-  flex: 1;
-  display: flex;
-  gap: 0.3em;
-  min-width: 0;
+    flex: 1;
+    display: flex;
+    gap: 0.3em;
+    min-width: 0;
 }
 
 
 #inputField {
-  flex: 1 1 0px;
-  min-width: 0;
-  max-width: 100%;
-  width: 1%;
-  font-size: 0.9em;
-  padding: 4px 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-  height: 28px;
-  outline-offset: 2px;
-  transition: border-color 0.2s;
+    flex: 1 1 0px;
+    min-width: 0;
+    max-width: 100%;
+    width: 1%;
+    font-size: 0.9em;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 28px;
+    outline-offset: 2px;
+    transition: border-color 0.2s;
 }
 
 @keyframes text-shake {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: translateX(0);
     }
-    20%, 60% {
+
+    20%,
+    60% {
         transform: translateX(-3px);
     }
-    40%, 80% {
+
+    40%,
+    80% {
         transform: translateX(3px);
     }
 }
@@ -159,9 +166,11 @@ button:hover {
     will-change: filter;
     transition: filter 300ms;
 }
+
 .logo:hover {
     filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.vanilla:hover {
     filter: drop-shadow(0 0 2em #f7df1eaa);
 }
@@ -176,6 +185,7 @@ button:hover {
     background-color: rgba(0, 0, 0, 0.5);
 }
 
+
 #logCards .card span.log.user,
 #logCards .card span.log.total {
     font-weight: bold;
@@ -187,6 +197,7 @@ button:hover {
     color: red;
     font-weight: bold;
 }
+
 #logCards .card .log.result .max {
     color: green;
     font-weight: bold;
@@ -244,11 +255,13 @@ button:hover {
         transform: scale(0);
         opacity: 0;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
     }
 }
+
 .card .log.result span {
     animation: rollPop 0.3s ease-out;
 }
@@ -259,6 +272,60 @@ button:hover {
     border-radius: 4px;
     color: #eee;
     font-family: monospace;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    position: relative;
+    cursor: help;
+    max-height: 3.3em; /* environ 2 lignes */
+    transition: max-height 0.3s ease;
+    content-visibility: auto;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.log.result .rolls-content {
+  display: block;
+  line-height: 1.5em;
+  max-height: 3.3em; /* 2 lignes approx */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.log.result.expanded {
+  max-height: 100vh;
+  transition: max-height 0.4s ease;
+}
+
+.log.result.expanded .rolls-content {
+  -webkit-line-clamp: unset;
+  max-height: none;
+  overflow: visible;
+}
+
+.expand-rolls {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  font-size: 0.8em;
+  background: transparent;
+  border: none;
+  color: #ccc;
+  padding: 0 4px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.expand-rolls:hover {
+  transform: scale(1.2);
 }
 
 .read-the-docs {
@@ -270,6 +337,7 @@ button:hover {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     100% {
         opacity: 1;
         transform: translateY(0);
@@ -291,9 +359,11 @@ button {
     cursor: pointer;
     transition: border-color 0.25s;
 }
+
 button:hover {
     border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
@@ -393,14 +463,16 @@ button:focus-visible {
 }
 
 #resizer {
-  width: 16px;
-  height: 16px;
-  position: absolute;
-  right: 8px;   /* plus éloigné de la scrollbar */
-  bottom: 8px;
-  cursor: se-resize;
-  border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    right: 8px;
+    /* plus éloigné de la scrollbar */
+    bottom: 8px;
+    cursor: se-resize;
+    border-radius: 4px;
 }
+
 /* Zones de resize de 16×16px en coin */
 .resize-handle {
     position: fixed;
@@ -408,8 +480,28 @@ button:focus-visible {
     height: 16px;
     background: transparent;
     z-index: 1000;
-  }
-  .resize-handle.nw { top: 0; left: 0; cursor: nwse-resize; }
-  .resize-handle.ne { top: 0; right: 0; cursor: nesw-resize; }
-  .resize-handle.sw { bottom: 0; left: 0; cursor: nesw-resize; }
-  .resize-handle.se { bottom: 0; right: 0; cursor: nwse-resize; }
+}
+
+.resize-handle.nw {
+    top: 0;
+    left: 0;
+    cursor: nwse-resize;
+}
+
+.resize-handle.ne {
+    top: 0;
+    right: 0;
+    cursor: nesw-resize;
+}
+
+.resize-handle.sw {
+    bottom: 0;
+    left: 0;
+    cursor: nesw-resize;
+}
+
+.resize-handle.se {
+    bottom: 0;
+    right: 0;
+    cursor: nwse-resize;
+}
