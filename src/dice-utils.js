@@ -50,6 +50,7 @@ export async function rollExpression(inputText) {
     const raw = inputText.toLowerCase().trim();
     let exprExpanded = raw;
     let allDiceMax = true;
+    let allDiceMin = true;
 
     // 1. Expand dbX
     exprExpanded = exprExpanded.replace(/(\d*)db(\d+)/gi, (_, countStr, num) => {
@@ -96,6 +97,7 @@ export async function rollExpression(inputText) {
         const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
         diceResults.push({ type: "fudge", rolls });
         allDiceMax = false;
+        allDiceMin = false;
         return rolls.reduce((a, b) => a + b, 0);
     });
 
@@ -131,6 +133,9 @@ export async function rollExpression(inputText) {
         if (rolls.some(r => r !== sides)) {
             allDiceMax = false;
         }
+        allDiceMin = diceResults.length > 0 && diceResults.every(group =>
+            group.rolls && group.rolls.length > 0 && group.rolls.every(r => r === 1)
+        );
         return rolls.reduce((a, b) => a + b, 0);
     });
 
@@ -175,7 +180,8 @@ export async function rollExpression(inputText) {
         expression: exprExpanded,
         rolls: exprDetailed,
         total,
-        allDiceMax
+        allDiceMax,
+        allDiceMin
     };
 }
 

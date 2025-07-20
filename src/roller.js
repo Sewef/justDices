@@ -190,7 +190,8 @@ export async function submitInput(text) {
     total: rollResult.total,
     hidden: parsedInput.hidden,
     original: text,
-    allDiceMax: rollResult.allDiceMax
+    allDiceMax: rollResult.allDiceMax,
+    allDiceMin: rollResult.allDiceMin
   };
 
   if (text.trim()) {
@@ -221,7 +222,11 @@ async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
 
-  newEntry.className = "card log-entry-animate" + (eventData.text.allDiceMax ? " critical-flex" : "");
+  let criticalClass = "";
+  if (eventData.text.allDiceMax) criticalClass = " critical-flex";
+  if (eventData.text.allDiceMin) criticalClass = " critical-failure";
+
+  newEntry.className = "card log-entry-animate" + criticalClass;
 
   if (eventData.text.hidden) {
     newEntry.classList.add("hidden-roll");

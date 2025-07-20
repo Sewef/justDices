@@ -363,7 +363,7 @@ button:hover {
 }
 
 .log-entry-animate {
-    animation: fadeInSlideDown 0.5s ease forwards;
+    animation: fadeInSlideDown 0.2s ease forwards;
 }
 
 @keyframes card-impact {
@@ -385,6 +385,21 @@ button:hover {
   will-change: transform;
 }
 
+@keyframes card-failure {
+  0%   { transform: translateY(0); opacity: 1; }
+  10%  { transform: translateY(2px); }
+  30%  { transform: translateY(6px); opacity: 0.7; }
+  50%  { transform: translateY(4px); }
+  70%  { transform: translateY(2px); opacity: 0.85; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.critical-failure {
+  animation: card-failure 1.2s ease-out;
+  will-change: transform, opacity;
+  position: relative;
+  backface-visibility: hidden;
+}
 
 
 button {
