@@ -150,24 +150,36 @@ export function setupDiceRoller(playerName) {
 
 // INPUT WORKFLOW
 export async function submitInput(text) {
+  // Utilitaire : affiche une erreur et déclenche l'animation d'erreur
+  function triggerInputError(message) {
+    const inputField = document.getElementById("inputField");
+    if (!inputField) return;
+
+    OBR.notification.show(message, "ERROR");
+
+    inputField.classList.add("input-error-text", "input-error-outline");
+
+    setTimeout(() => {
+      inputField.classList.remove("input-error-text", "input-error-outline");
+    }, 1000);
+  }
+
   // 1. Parse l’input pour extraire l’expression
   const parsedInput = await parseInput(text);
   if (!parsedInput) {
     console.error("Failed to parse input.");
-    const inputField = document.getElementById("inputField");
-    inputField.classList.add("input-error-text", "input-error-outline");
-    setTimeout(() => {
-      inputField.classList.remove("input-error-text", "input-error-outline");
-    }, 1000);
+    triggerInputError("Invalid or empty dice command.");
     return;
   }
 
-  // 2. Lance les dés en passant parsedInput.rollExpression
+  // 2. Lance les dés
   const rollResult = await rollExpression(parsedInput.rollExpression);
   if (!rollResult) {
     console.error("rollExpression returned null.");
+    triggerInputError("Dice roll failed (syntax error?).");
     return;
   }
+
 
   // 3. Construit l’objet de résultat en utilisant exprDetailed / exprNumeric
   const resultStr = {
@@ -192,6 +204,16 @@ export async function submitInput(text) {
   );
 }
 
+function escapeHTML(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+
+
 // LOGGING
 async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
@@ -215,10 +237,15 @@ async function addLogEntry(eventData) {
         <span class="log user">
           ${eventData.text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
           ${eventData.sender.name}:
-        </span> ${eventData.text.expression}<br>
-        <span class="log result truncated">
+        </span>
+        <span class="log-expression">
+          ${eventData.text.original || eventData.text.expression.split(" (")[0]}
+          <span class="roll-tooltip" title="${escapeHTML(escapeHTML(eventData.text.expression))}">🔍</span>
+        </span>
+        <span class="log result truncated hidden-rolls">
           <span class="rolls-content">${eventData.text.rolls}</span>
         </span>
+
 
  = 
         <span class="log total">${eventData.text.total}</span>

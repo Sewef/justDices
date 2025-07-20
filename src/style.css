@@ -101,28 +101,15 @@ h1 {
 }
 
 @keyframes text-shake {
-
-    0%,
-    100% {
-        transform: translateX(0);
-    }
-
-    20%,
-    60% {
-        transform: translateX(-3px);
-    }
-
-    40%,
-    80% {
-        transform: translateX(3px);
-    }
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
 }
 
 .input-error-text {
-    animation: text-shake 0.5s;
-    display: inline-block;
-    /* force repaint to limiter les glitches */
-    will-change: transform;
+  animation: text-shake 0.5s;
+  display: inline-block;
+  will-change: transform;
 }
 
 .input-error-outline {
@@ -332,6 +319,13 @@ button:hover {
     color: #888;
 }
 
+.roll-tooltip {
+  cursor: default;              /* flèche classique */
+  user-select: none;            /* empêche la sélection du texte */
+  margin-left: 0.5em;
+  display: inline-block;        /* évite que le span se comporte comme texte */
+}
+
 @keyframes fadeInSlideDown {
     0% {
         opacity: 0;
@@ -476,8 +470,8 @@ button:focus-visible {
 /* Zones de resize de 16×16px en coin */
 .resize-handle {
     position: fixed;
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     background: transparent;
     z-index: 1000;
 }
