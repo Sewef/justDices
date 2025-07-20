@@ -101,15 +101,27 @@ h1 {
 }
 
 @keyframes text-shake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-3px); }
-  40%, 80% { transform: translateX(3px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-3px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(3px);
+    }
 }
 
 .input-error-text {
-  animation: text-shake 0.5s;
-  display: inline-block;
-  will-change: transform;
+    animation: text-shake 0.5s;
+    display: inline-block;
+    will-change: transform;
 }
 
 .input-error-outline {
@@ -192,6 +204,8 @@ button:hover {
 }
 
 .log-entry {
+    position: relative;
+    overflow: visible;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -267,7 +281,8 @@ button:hover {
     text-overflow: ellipsis;
     white-space: normal;
     position: relative;
-    max-height: 3.3em; /* environ 2 lignes */
+    max-height: 3.3em;
+    /* environ 2 lignes */
     transition: max-height 0.3s ease;
     content-visibility: auto;
     min-width: 0;
@@ -277,42 +292,43 @@ button:hover {
 }
 
 .log.result .rolls-content {
-  display: block;
-  line-height: 1.5em;
-  max-height: 3.3em; /* 2 lignes approx */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+    display: block;
+    line-height: 1.5em;
+    max-height: 3.3em;
+    /* 2 lignes approx */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .log.result.expanded {
-  max-height: 100vh;
-  transition: max-height 0.4s ease;
+    max-height: 100vh;
+    transition: max-height 0.4s ease;
 }
 
 .log.result.expanded .rolls-content {
-  -webkit-line-clamp: unset;
-  max-height: none;
-  overflow: visible;
+    -webkit-line-clamp: unset;
+    max-height: none;
+    overflow: visible;
 }
 
 .expand-rolls {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  font-size: 0.8em;
-  background: transparent;
-  border: none;
-  color: #ccc;
-  padding: 0 4px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    font-size: 0.8em;
+    background: transparent;
+    border: none;
+    color: #ccc;
+    padding: 0 4px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
 }
 
 .expand-rolls:hover {
-  transform: scale(1.2);
+    transform: scale(1.2);
 }
 
 .read-the-docs {
@@ -320,10 +336,18 @@ button:hover {
 }
 
 .roll-tooltip {
-  cursor: default;              /* flèche classique */
-  user-select: none;            /* empêche la sélection du texte */
-  margin-left: 0.5em;
-  display: inline-block;        /* évite que le span se comporte comme texte */
+    cursor: default;
+    /* flèche classique */
+    user-select: none;
+    /* empêche la sélection du texte */
+    margin-left: 0.5em;
+    display: inline-block;
+    /* évite que le span se comporte comme texte */
+}
+
+.log-entry {
+    position: relative;
+    animation: fadeInSlideDown 0.5s ease forwards;
 }
 
 @keyframes fadeInSlideDown {
@@ -341,6 +365,58 @@ button:hover {
 .log-entry-animate {
     animation: fadeInSlideDown 0.5s ease forwards;
 }
+
+@keyframes card-impact {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    10% {
+        transform: translate(5px, -3px);
+    }
+
+    20% {
+        transform: translate(-6px, 2px);
+    }
+
+    30% {
+        transform: translate(5px, 4px);
+    }
+
+    40% {
+        transform: translate(-5px, -3px);
+    }
+
+    50% {
+        transform: translate(4px, 5px);
+    }
+
+    60% {
+        transform: translate(-4px, -4px);
+    }
+
+    70% {
+        transform: translate(3px, 2px);
+    }
+
+    80% {
+        transform: translate(-2px, -2px);
+    }
+
+    90% {
+        transform: translate(1px, 1px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+.critical-flex {
+    animation: card-impact 0.8s ease-out;
+    will-change: transform;
+}
+
 
 button {
     border-radius: 8px;

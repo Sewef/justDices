@@ -188,7 +188,9 @@ export async function submitInput(text) {
     // Dans 'rolls', on met le détail formaté
     rolls: rollResult.rolls,
     total: rollResult.total,
-    hidden: parsedInput.hidden
+    hidden: parsedInput.hidden,
+    original: text,
+    allDiceMax: rollResult.allDiceMax
   };
 
   if (text.trim()) {
@@ -219,7 +221,7 @@ async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
 
-  newEntry.className = "card log-entry-animate";
+  newEntry.className = "card log-entry-animate" + (eventData.text.allDiceMax ? " critical-flex" : "");
 
   if (eventData.text.hidden) {
     newEntry.classList.add("hidden-roll");

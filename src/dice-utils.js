@@ -49,6 +49,7 @@ const DBKeyword = [
 export async function rollExpression(inputText) {
     const raw = inputText.toLowerCase().trim();
     let exprExpanded = raw;
+    let allDiceMax = true;
 
     // 1. Expand dbX
     exprExpanded = exprExpanded.replace(/(\d*)db(\d+)/gi, (_, countStr, num) => {
@@ -94,6 +95,7 @@ export async function rollExpression(inputText) {
         const count = parseInt(countStr, 10) || 4;
         const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
         diceResults.push({ type: "fudge", rolls });
+        allDiceMax = false;
         return rolls.reduce((a, b) => a + b, 0);
     });
 
@@ -126,6 +128,9 @@ export async function rollExpression(inputText) {
         const sides = parseInt(sidesStr, 10);
         const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
         diceResults.push({ type: "normal", rolls, sides });
+        if (rolls.some(r => r !== sides)) {
+            allDiceMax = false;
+        }
         return rolls.reduce((a, b) => a + b, 0);
     });
 
@@ -169,7 +174,8 @@ export async function rollExpression(inputText) {
     return {
         expression: exprExpanded,
         rolls: exprDetailed,
-        total
+        total,
+        allDiceMax
     };
 }
 
