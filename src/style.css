@@ -367,38 +367,92 @@ button:hover {
 }
 
 @keyframes card-impact {
-  0%   { transform: translate(0, 0) rotate(0deg); }
-  10%  { transform: translate(5px, -3px) rotate(0.5deg); }
-  20%  { transform: translate(-6px, 2px) rotate(-0.5deg); }
-  30%  { transform: translate(5px, 4px) rotate(0.8deg); }
-  40%  { transform: translate(-5px, -3px) rotate(-0.8deg); }
-  50%  { transform: translate(4px, 5px) rotate(0.4deg); }
-  60%  { transform: translate(-4px, -4px) rotate(-0.4deg); }
-  70%  { transform: translate(3px, 2px) rotate(0.2deg); }
-  80%  { transform: translate(-2px, -2px) rotate(-0.2deg); }
-  90%  { transform: translate(1px, 1px) rotate(0deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    10% {
+        transform: translate(5px, -3px) rotate(0.5deg);
+    }
+
+    20% {
+        transform: translate(-6px, 2px) rotate(-0.5deg);
+    }
+
+    30% {
+        transform: translate(5px, 4px) rotate(0.8deg);
+    }
+
+    40% {
+        transform: translate(-5px, -3px) rotate(-0.8deg);
+    }
+
+    50% {
+        transform: translate(4px, 5px) rotate(0.4deg);
+    }
+
+    60% {
+        transform: translate(-4px, -4px) rotate(-0.4deg);
+    }
+
+    70% {
+        transform: translate(3px, 2px) rotate(0.2deg);
+    }
+
+    80% {
+        transform: translate(-2px, -2px) rotate(-0.2deg);
+    }
+
+    90% {
+        transform: translate(1px, 1px) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
 }
 
 .critical-flex {
-  animation: card-impact 0.8s ease-out;
-  will-change: transform;
+    animation: card-impact 0.8s ease-out;
+    will-change: transform;
 }
 
 @keyframes card-failure {
-  0%   { transform: translateY(0); opacity: 1; }
-  10%  { transform: translateY(2px); }
-  30%  { transform: translateY(6px); opacity: 0.7; }
-  50%  { transform: translateY(4px); }
-  70%  { transform: translateY(2px); opacity: 0.85; }
-  100% { transform: translateY(0); opacity: 1; }
+  0%,
+  100% {
+    -webkit-transform: translateX(0%);
+            transform: translateX(0%);
+    -webkit-transform-origin: 50% 50%;
+            transform-origin: 50% 50%;
+  }
+  15% {
+    -webkit-transform: translateX(-30px) rotate(-6deg);
+            transform: translateX(-30px) rotate(-6deg);
+  }
+  30% {
+    -webkit-transform: translateX(15px) rotate(6deg);
+            transform: translateX(15px) rotate(6deg);
+  }
+  45% {
+    -webkit-transform: translateX(-15px) rotate(-3.6deg);
+            transform: translateX(-15px) rotate(-3.6deg);
+  }
+  60% {
+    -webkit-transform: translateX(9px) rotate(2.4deg);
+            transform: translateX(9px) rotate(2.4deg);
+  }
+  75% {
+    -webkit-transform: translateX(-6px) rotate(-1.2deg);
+            transform: translateX(-6px) rotate(-1.2deg);
+  }
 }
 
+
 .critical-failure {
-  animation: card-failure 1.2s ease-out;
-  will-change: transform, opacity;
-  position: relative;
-  backface-visibility: hidden;
+    animation: card-failure 0.8s ease-out;
+    will-change: transform, opacity;
+    position: relative;
+    backface-visibility: hidden;
 }
 
 
