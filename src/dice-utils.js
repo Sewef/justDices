@@ -175,6 +175,12 @@ export async function rollExpression(inputText) {
         console.error("Erreur d'évaluation mathjs :", exprNumeric, e);
         return null;
     }
+        // Ajoute une mise en forme aux nombres restants dans exprDetailed// Si le premier terme n'est pas entre crochets, l'encadrer
+exprDetailed = exprDetailed.replace(/^(\d+)(?![^[]*[\]])/, "[ $1 ]");
+
+    exprDetailed = exprDetailed.replace(/([+\-])\s*(\d+)(?![^[]*[\]])/g, (_, sign, num) => {
+        return ` ${sign} [ ${num} ]`;
+    });
 
     if (diceResults.length === 0) {
         allDiceMin = false;
