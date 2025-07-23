@@ -176,6 +176,11 @@ export async function rollExpression(inputText) {
         return null;
     }
 
+    if (diceResults.length === 0) {
+        allDiceMin = false;
+        allDiceMax = false;
+    }
+
     return {
         expression: exprExpanded,
         rolls: exprDetailed,
