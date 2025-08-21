@@ -46,127 +46,113 @@ const DBKeyword = [
     { key: "db2", value: "1d6+3" }, { key: "db1", value: "1d6+1" }
 ];
 
-export async function rollExpression(inputText) {
-    const raw = inputText.toLowerCase().trim();
-    let exprExpanded = raw;
-    let allDiceMax = true;
-    let allDiceMin = true;
+export async function rollExpression(text) {
+    const raw = text.toLowerCase().trim();
 
-    // 1. Expand dbX
-    exprExpanded = exprExpanded.replace(/(\d*)db(\d+)/gi, (_, countStr, num) => {
-        const key = `db${num}`;
-        const entry = DBKeyword.find(e => e.key.toLowerCase() === key.toLowerCase());
-        if (!entry) return `db${num}`;
-        const count = parseInt(countStr, 10) || 1;
-        return Array(count).fill(entry.value).join(" + ");
-    });
+    // Dés, dbN, dF(udge), nombres, opérateurs, parenthèses
+    const tokenRegex = /([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)])/gi;
 
-    // 2. Traitement unifié de exprNumeric et exprDetailed
-    let exprNumeric = exprExpanded;
-    let exprDetailed = raw.replace(/(\d*)db(\d+)/gi, (_, countStr, num) => {
-        const key = `db${num}`;
-        const entry = DBKeyword.find(e => e.key.toLowerCase() === key.toLowerCase());
-        if (!entry) return `db${num}`;
-        const count = parseInt(countStr, 10) || 1;
+    const tokens = raw.match(tokenRegex).map(t => (/^\.\d+$/.test(t) ? "0" + t : t));
+    if (!tokens) {
+        console.error("Impossible de tokeniser l'expression :", raw);
+        return null;
+    }
 
-        const [, diceExpr, bonusStr] = entry.value.match(/^(\d*d\d+)\s*\+\s*(\d+)$/i);
-        const bonus = parseInt(bonusStr, 10);
-        const [n, sides] = diceExpr.split("d").map(Number);
+    // ── 1) Construire l'expression 'affichée' en développant dbN proprement ──
+    //    (dbN -> "(NdX+Bonus)" ; 2dbN -> "(NdX+Bonus) + (NdX+Bonus)")
+    const expandedTokens = tokens.map(tok => {
+        const m = tok.match(/^(\d*)db(\d+)$/i);
+        if (!m) return tok;
 
-        const results = [];
-
-        for (let i = 0; i < count; i++) {
-            const rolls = Array.from({ length: n }, () => Math.floor(Math.random() * sides) + 1);
-            const rollSum = rolls.reduce((a, b) => a + b, 0);
-            const formatted = rolls.map(r => {
-                if (r === 1) return `<span class="min">${r}</span>`;
-                if (r === sides) return `<span class="max">${r}</span>`;
-                return `${r}`;
-            });
-            results.push(`( [ ${formatted.join(", ")} ] + [ ${bonus} ] )`);
+        const count = parseInt(m[1], 10) || 1;
+        const key = `db${m[2]}`.toLowerCase();
+        const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
+        if (!entry) {
+            console.warn(`Définition manquante pour ${key}`);
+            return tok;
         }
-
-        return results.join(" + ");
+        const block = `(${entry.value})`;
+        return count > 1 ? Array(count).fill(block).join(" + ") : block;
     });
+    const exprExpanded = expandedTokens.join(" ");
 
-    const diceResults = [];
+    // ── 2) Construire le détail et la valeur numérique ──
+    const numericTokens = [];
+    const detailedTokens = [];
 
-    // Fudge dice
-    exprNumeric = exprNumeric.replace(/(\d*)dF(?:udge)?/gi, (_, countStr) => {
-        const count = parseInt(countStr, 10) || 4;
-        const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
-        diceResults.push({ type: "fudge", rolls });
-        allDiceMax = false;
-        allDiceMin = false;
-        return rolls.reduce((a, b) => a + b, 0);
-    });
-
-    exprDetailed = exprDetailed.replace(/(\d*)dF(?:udge)?(\s*[\+\-]\s*\d+)?/gi, (_, countStr, bonusPart) => {
-        const { rolls } = diceResults.shift();
-
-        const formatted = rolls.map(r => {
-            if (r === -1) return `<span class="min">-1</span>`;
-            if (r === 1) return `<span class="max">1</span>`;
-            return `0`;
-        });
-
-        let result = `[ ${formatted.join(", ")} ]`;
-
-        if (bonusPart) {
-            const bonusMatch = bonusPart.match(/([\+\-])\s*(\d+)/);
-            if (bonusMatch) {
-                const op = bonusMatch[1];
-                const bonus = bonusMatch[2];
-                result += ` ${op} [ ${bonus} ]`;
+    for (let tok of tokens) {
+        // a) dbN
+        let m;
+        if ((m = tok.match(/^(\d*)db(\d+)$/i))) {
+            const mult = parseInt(m[1], 10) || 1;
+            const key = `db${m[2]}`.toLowerCase();
+            const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
+            if (!entry) {
+                console.error(`Définition manquante pour ${key}`);
+                continue;
             }
-        }
 
-        return result;
-    });
+            // entry.value du style "NdX+B" (ex: "2d6+8")
+            const parts = entry.value.split("+");
+            const dicePart = parts[0].trim();              // "2d6"
+            const bonus = parts[1] ? parseInt(parts[1].trim(), 10) : 0;
 
-    // NdX dice
-    exprNumeric = exprNumeric.replace(/(\d*)d(\d+)/gi, (_, countStr, sidesStr) => {
-        const count = parseInt(countStr, 10) || 1;
-        const sides = parseInt(sidesStr, 10);
-        const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1);
-        diceResults.push({ type: "normal", rolls, sides });
-        if (rolls.some(r => r !== sides)) {
-            allDiceMax = false;
-        }
-        allDiceMin = diceResults.length > 0 && diceResults.every(group =>
-            group.rolls && group.rolls.length > 0 && group.rolls.every(r => r === 1)
-        );
-        return rolls.reduce((a, b) => a + b, 0);
-    });
-
-    exprDetailed = exprDetailed.replace(/(\d*)d(\d+)((\s*[\+\-]\s*\d+)+)?/gi, (_, countStr, sidesStr, bonusPart) => {
-        const { rolls, sides } = diceResults.shift();
-
-        const formattedRolls = rolls.map(r => {
-            if (r === 1) return `<span class="min">${r}</span>`;
-            if (r === sides) return `<span class="max">${r}</span>`;
-            return `${r}`;
-        });
-
-        let result = `[ ${formattedRolls.join(", ")} ]`;
-
-        if (bonusPart) {
-            const bonuses = bonusPart.match(/([\+\-])\s*(\d+)/g);
-            if (bonuses) {
-                for (const bonus of bonuses) {
-                    const match = bonus.match(/([\+\-])\s*(\d+)/);
-                    if (!match) continue;
-                    const op = match[1];
-                    const value = match[2];
-                    result += ` ${op} [ ${value} ]`;
-                }
+            const md = dicePart.match(/^(\d*)d(\d+)$/i);
+            if (!md) {
+                console.error(`Format db invalide: ${entry.value}`);
+                continue;
             }
+
+            const diceCount = parseInt(md[1], 10) || 1;
+            const faces = parseInt(md[2], 10);
+
+            let sumNumeric = 0;
+            const detailedParts = [];
+
+            for (let i = 0; i < mult; i++) {
+                const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * faces) + 1);
+                const subSum = rolls.reduce((a, b) => a + b, 0);
+                sumNumeric += subSum + bonus;
+                detailedParts.push(`[ ${rolls.join(", ")} ]`);
+            }
+
+            // Détail lisible : les jets, puis “+ bonus” répété mult fois (jamais en crochets)
+            detailedTokens.push(...detailedParts, ...Array(mult).fill(`+ ${bonus}`));
+            // Numérique : une seule valeur globale
+            numericTokens.push(String(sumNumeric));
+            continue;
         }
 
-        return result;
-    });
+        // b) dF / dFudge
+        if ((m = tok.match(/^(\d*)dF(?:udge)?$/i))) {
+            const count = parseInt(m[1], 10) || 4;
+            const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
+            const sum = rolls.reduce((a, b) => a + b, 0);
+            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            numericTokens.push(String(sum));
+            continue;
+        }
 
-    // 3. Évaluer
+        // c) NdX
+        if ((m = tok.match(/^(\d*)d(\d+)$/i))) {
+            const count = parseInt(m[1], 10) || 1;
+            const faces = parseInt(m[2], 10);
+            const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * faces) + 1);
+            const sum = rolls.reduce((a, b) => a + b, 0);
+            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            numericTokens.push(String(sum));
+            continue;
+        }
+
+        // d) nombres, opérateurs, parenthèses
+        detailedTokens.push(tok);
+        numericTokens.push(tok);
+    }
+
+    const exprDetailed = detailedTokens.join(" ");
+    const exprNumeric = numericTokens.join(" ");
+
+    // ── 3) Évaluer le total ──
     let total;
     try {
         total = evaluate(exprNumeric);
@@ -175,25 +161,13 @@ export async function rollExpression(inputText) {
         console.error("Erreur d'évaluation mathjs :", exprNumeric, e);
         return null;
     }
-        // Ajoute une mise en forme aux nombres restants dans exprDetailed// Si le premier terme n'est pas entre crochets, l'encadrer
-exprDetailed = exprDetailed.replace(/^(\d+)(?![^[]*[\]])/, "[ $1 ]");
-
-    exprDetailed = exprDetailed.replace(/([+\-])\s*(\d+)(?![^[]*[\]])/g, (_, sign, num) => {
-        return ` ${sign} [ ${num} ]`;
-    });
-
-    if (diceResults.length === 0) {
-        allDiceMin = false;
-        allDiceMax = false;
-    }
 
     return {
         expression: exprExpanded,
         rolls: exprDetailed,
-        total,
-        allDiceMax,
-        allDiceMin
+        total: total
     };
 }
+
 
 
