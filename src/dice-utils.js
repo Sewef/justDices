@@ -148,7 +148,12 @@ export async function rollExpression(text) {
             }
             // ---------------------
             const sum = rolls.reduce((a, b) => a + b, 0);
-            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            const formatted = rolls.map(r => {
+                if (r === -1) return `<span class="min">${r}</span>`;
+                if (r === 1) return `<span class="max">${r}</span>`;
+                return `${r}`;
+            });
+            detailedTokens.push(`[ ${formatted.join(", ")} ]`);
             numericTokens.push(String(sum));
             continue;
         }
@@ -166,7 +171,13 @@ export async function rollExpression(text) {
             }
             // ---------------------
             const sum = rolls.reduce((a, b) => a + b, 0);
-            detailedTokens.push(`[ ${rolls.join(", ")} ]`);
+            const formatted = rolls.map(r => {
+                if (r === 1) return `<span class="min">${r}</span>`;
+                if (r === faces) return `<span class="max">${r}</span>`;
+                return `${r}`;
+            });
+
+            detailedTokens.push(`[ ${formatted.join(", ")} ]`);
             numericTokens.push(String(sum));
             continue;
         }

@@ -1,6 +1,5 @@
 import './style.css'
 import OBR from "@owlbear-rodeo/sdk";
-import javascriptLogo from './javascript.svg'
 import { setupDiceRoller } from './roller.js';
 
 document.querySelector('#app').innerHTML = `

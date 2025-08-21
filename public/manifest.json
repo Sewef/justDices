@@ -1,9 +1,9 @@
 {
     "name": "JustDices",
-    "version": "1.0.25",
+    "version": "1.0.26",
     "manifest_version": 1,
     "action": {
-      "title": "JustDices DEV",
+      "title": "JustDices",
       "icon": "/icon.svg",
       "popover": "/",
       "height": 350,
