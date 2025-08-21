@@ -49,6 +49,11 @@ const DBKeyword = [
 export async function rollExpression(text) {
     const raw = text.toLowerCase().trim();
 
+    // Flags de suivi des dés
+    let anyDiceRolled = false;
+    let allDiceMin = true;  // restera true seulement si TOUS les dés tirés sont au min
+    let allDiceMax = true;  // restera true seulement si TOUS les dés tirés sont au max
+
     // Dés, dbN, dF(udge), nombres, opérateurs, parenthèses
     const tokenRegex = /([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)])/gi;
 
@@ -111,6 +116,14 @@ export async function rollExpression(text) {
 
             for (let i = 0; i < mult; i++) {
                 const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * faces) + 1);
+                // --- MAJ des flags ---
+                anyDiceRolled = true;
+                // min=1, max=faces
+                for (const r of rolls) {
+                    if (r !== 1) allDiceMin = false;
+                    if (r !== faces) allDiceMax = false;
+                }
+                // ---------------------
                 const subSum = rolls.reduce((a, b) => a + b, 0);
                 sumNumeric += subSum + bonus;
                 detailedParts.push(`[ ${rolls.join(", ")} ]`);
@@ -127,6 +140,13 @@ export async function rollExpression(text) {
         if ((m = tok.match(/^(\d*)dF(?:udge)?$/i))) {
             const count = parseInt(m[1], 10) || 4;
             const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
+            // --- MAJ des flags ---
+            anyDiceRolled = true;
+            for (const r of rolls) {
+                if (r !== -1) allDiceMin = false;
+                if (r !== 1) allDiceMax = false;
+            }
+            // ---------------------
             const sum = rolls.reduce((a, b) => a + b, 0);
             detailedTokens.push(`[ ${rolls.join(", ")} ]`);
             numericTokens.push(String(sum));
@@ -138,6 +158,13 @@ export async function rollExpression(text) {
             const count = parseInt(m[1], 10) || 1;
             const faces = parseInt(m[2], 10);
             const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * faces) + 1);
+            // --- MAJ des flags ---
+            anyDiceRolled = true;
+            for (const r of rolls) {
+                if (r !== 1) allDiceMin = false;
+                if (r !== faces) allDiceMax = false;
+            }
+            // ---------------------
             const sum = rolls.reduce((a, b) => a + b, 0);
             detailedTokens.push(`[ ${rolls.join(", ")} ]`);
             numericTokens.push(String(sum));
@@ -162,10 +189,19 @@ export async function rollExpression(text) {
         return null;
     }
 
+    if (!anyDiceRolled) {
+        allDiceMin = false;
+        allDiceMax = false;
+    }
+
+    console.log(anyDiceRolled, allDiceMin, allDiceMax);
+
     return {
         expression: exprExpanded,
         rolls: exprDetailed,
-        total: total
+        total: total,
+        allDiceMin: allDiceMin,
+        allDiceMax: allDiceMax,
     };
 }
 
