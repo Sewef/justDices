@@ -1,6 +1,7 @@
 import './style.css'
 import OBR from "@owlbear-rodeo/sdk";
 import { setupDiceRoller } from './roller.js';
+import { setupJustDicesApi } from "./api.js";
 
 document.querySelector('#app').innerHTML = `
   <div id="inputRow">
@@ -22,5 +23,6 @@ document.querySelector('#app').innerHTML = `
 `;
 
 OBR.onReady(() => OBR.player.getName().then((playerName) => {
+  setupJustDicesApi();
   setupDiceRoller(playerName);
 }));
