@@ -173,7 +173,7 @@ export async function submitInput(text) {
   }
 
   // 2. Lance les dés
-  const rollResult = await rollExpression(parsedInput.rollExpression);
+  const rollResult = await rollExpression(parsedInput.rollExpression, parsedInput.mode);
   if (!rollResult) {
     console.error("rollExpression returned null.");
     triggerInputError("Dice roll failed (syntax error?).");

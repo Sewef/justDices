@@ -56,18 +56,28 @@ function parseDbValue(dbValue) {
 }
 
 // Roule N dés à F faces → { rolls[], sum }
-function rollNdX(diceCount, faces) {
-    const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * faces) + 1);
+function rollNdX(diceCount, faces, mode) {
+    const one = 1, max = faces;
+    const draw = () =>
+        mode === "max" ? max :
+            mode === "min" ? one :
+                (Math.floor(Math.random() * faces) + 1);
+
+    const rolls = Array.from({ length: diceCount }, draw);
     const sum = rolls.reduce((a, b) => a + b, 0);
     return { rolls, sum };
 }
 
 // Roule dF (count) → { rolls[], sum } avec valeurs [-1,0,1]
-function rollFudge(count) {
-    const values = [-1, 0, 1];
-    const rolls = Array.from({ length: count }, () => values[Math.floor(Math.random() * 3)]);
-    const sum = rolls.reduce((a, b) => a + b, 0);
-    return { rolls, sum };
+function rollFudge(count, mode) {
+  const draw = () =>
+    mode === "max" ? 1 :
+    mode === "min" ? -1 :
+    [-1, 0, 1][Math.floor(Math.random() * 3)];
+
+  const rolls = Array.from({ length: count }, draw);
+  const sum = rolls.reduce((a, b) => a + b, 0);
+  return { rolls, sum };
 }
 
 // Colore min/max pour affichage
@@ -118,6 +128,13 @@ export async function parseInput(text) {
 
     if (!rollExpression) return null;
 
+    let mode = "normal";
+    const modeMatch = rollExpression.match(/^(max|min)\b/i);
+    if (modeMatch) {
+        mode = modeMatch[1].toLowerCase();
+        rollExpression = rollExpression.slice(modeMatch[0].length).trim();
+    }
+
     // Validation large (fonctions + .75)
     const tokens = rollExpression.match(TOKEN_REGEX);
     if (!tokens) return null;
@@ -128,14 +145,14 @@ export async function parseInput(text) {
         if (!validTokenRegex.test(tok)) return null;
     }
 
-    return { rollExpression, hidden };
+    return { rollExpression, hidden, mode };
 }
 
 /* ===========================
    Roll principal (DRY)
 =========================== */
 
-export async function rollExpression(text) {
+export async function rollExpression(text, mode = "normal") {
     const raw = text.toLowerCase().trim();
 
     // Tokenize + normalise
@@ -181,7 +198,7 @@ export async function rollExpression(text) {
             const partsForDetail = [];
 
             for (let i = 0; i < mult; i++) {
-                const { rolls, sum } = rollNdX(diceCount, faces);
+                const { rolls, sum } = rollNdX(diceCount, faces, mode);
                 updateMinMaxFlags(rolls, faces, flags);
 
                 const decorated = decorateRolls(rolls, 1, faces);
@@ -198,7 +215,7 @@ export async function rollExpression(text) {
         // dF(udge)
         if ((m = tok.match(/^(\d*)dF(?:udge)?$/i))) {
             const count = parseInt(m[1], 10) || 4;
-            const { rolls, sum } = rollFudge(count);
+            const { rolls, sum } = rollFudge(count, mode);
             updateMinMaxFlagsFudge(rolls, flags);
 
             const decorated = decorateRolls(rolls, -1, 1);
@@ -212,7 +229,7 @@ export async function rollExpression(text) {
             const diceCount = parseInt(m[1], 10) || 1;
             const faces = parseInt(m[2], 10);
 
-            const { rolls, sum } = rollNdX(diceCount, faces);
+            const { rolls, sum } = rollNdX(diceCount, faces, mode);
             updateMinMaxFlags(rolls, faces, flags);
 
             const decorated = decorateRolls(rolls, 1, faces);
