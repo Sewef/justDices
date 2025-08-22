@@ -126,7 +126,13 @@ export async function rollExpression(text) {
                 // ---------------------
                 const subSum = rolls.reduce((a, b) => a + b, 0);
                 sumNumeric += subSum + bonus;
-                detailedParts.push(`[ ${rolls.join(", ")} ]`);
+                const formatted = rolls.map(r => {
+                    if (r === 1) return `<span class="min">${r}</span>`;
+                    if (r === faces) return `<span class="max">${r}</span>`;
+                    return `${r}`;
+                });
+
+                detailedParts.push(`[ ${formatted.join(", ")} ]`);
             }
 
             // Détail lisible : les jets, puis “+ bonus” répété mult fois (jamais en crochets)
