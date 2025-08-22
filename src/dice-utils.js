@@ -1,35 +1,12 @@
+// dice-utils.js
 import { evaluate } from "mathjs";
 
-// INPUT PARSING
-export async function parseInput(text) {
-    let rollExpression = "";
-    let hidden = false;
-
-    if (text.startsWith("/r") || text.startsWith("/roll")) {
-        rollExpression = text.replace("/roll", "").replace("/r", "").trim();
-    }
-    else if (text.startsWith("/gr") || text.startsWith("/gmroll")) {
-        rollExpression = text.replace("/gmroll", "").replace("/gr", "").trim();
-        hidden = true;
-    }
-    else {
-        rollExpression = text;
-    }
-
-    if (!rollExpression) {
-        console.error("No roll expression provided.");
-        return null;
-    }
-
-    // On ne valide plus manuellement les tokens — mathjs gère les erreurs
-    return {
-        rollExpression,
-        hidden
-    };
-}
+/* ===========================
+   Tables & Constantes
+=========================== */
 
 // Table des dbX → expressions équivalentes
-const DBKeyword = [
+const DB_KEYWORD = [
     { key: "db28", value: "8d12+80" }, { key: "db27", value: "8d12+70" },
     { key: "db26", value: "7d12+65" }, { key: "db25", value: "6d12+60" },
     { key: "db24", value: "6d12+55" }, { key: "db23", value: "6d12+50" },
@@ -43,160 +20,221 @@ const DBKeyword = [
     { key: "db8", value: "2d8+10" }, { key: "db7", value: "2d6+10" },
     { key: "db6", value: "2d6+8" }, { key: "db5", value: "1d8+8" },
     { key: "db4", value: "1d8+6" }, { key: "db3", value: "1d6+5" },
-    { key: "db2", value: "1d6+3" }, { key: "db1", value: "1d6+1" }
+    { key: "db2", value: "1d6+3" }, { key: "db1", value: "1d6+1" },
 ];
+
+// Tokenizer commun : fonctions, dés, décimaux nus, opérateurs, parenthèses
+const TOKEN_REGEX =
+    /([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)])/gi;
+
+/* ===========================
+   Utilitaires
+=========================== */
+
+// Normalise .75 → 0.75
+function normalizeToken(t) {
+    return /^\.\d+$/.test(t) ? `0${t}` : t;
+}
+
+// Cherche la définition dbN
+function findDbDef(keyNum) {
+    const key = `db${keyNum}`.toLowerCase();
+    return DB_KEYWORD.find(e => e.key.toLowerCase() === key) || null;
+}
+
+// Parse "NdX+K" → { diceCount, faces, bonus }
+function parseDbValue(dbValue) {
+    // ex: "2d6+8" ou "1d8+6"
+    const [dicePart, bonusPart] = dbValue.split("+");
+    const m = dicePart.trim().match(/^(\d*)d(\d+)$/i);
+    if (!m) return null;
+    return {
+        diceCount: parseInt(m[1], 10) || 1,
+        faces: parseInt(m[2], 10),
+        bonus: bonusPart ? parseInt(bonusPart.trim(), 10) : 0,
+    };
+}
+
+// Roule N dés à F faces → { rolls[], sum }
+function rollNdX(diceCount, faces) {
+    const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * faces) + 1);
+    const sum = rolls.reduce((a, b) => a + b, 0);
+    return { rolls, sum };
+}
+
+// Roule dF (count) → { rolls[], sum } avec valeurs [-1,0,1]
+function rollFudge(count) {
+    const values = [-1, 0, 1];
+    const rolls = Array.from({ length: count }, () => values[Math.floor(Math.random() * 3)]);
+    const sum = rolls.reduce((a, b) => a + b, 0);
+    return { rolls, sum };
+}
+
+// Colore min/max pour affichage
+function decorateRolls(rolls, minVal, maxVal) {
+    const same = (minVal === maxVal);
+    return rolls.map(r => {
+        if (!same && r === minVal) return `<span class="min">${r}</span>`;
+        if (!same && r === maxVal) return `<span class="max">${r}</span>`;
+        return String(r);
+    }).join(", ");
+}
+
+// Met à jour les flags globaux min/max selon un paquet de jets
+function updateMinMaxFlags(rolls, faces, flags) {
+    flags.anyDiceRolled = true;
+    for (const r of rolls) {
+        if (r !== (faces === 1 ? 1 : 1)) flags.allDiceMin &&= (r === 1);      // équivalent lisible ci‑dessous
+        if (r !== faces) flags.allDiceMax = false;
+        if (r !== 1) flags.allDiceMin = false;
+    }
+}
+
+// Variante pour dF (-1..1)
+function updateMinMaxFlagsFudge(rolls, flags) {
+    flags.anyDiceRolled = true;
+    for (const r of rolls) {
+        if (r !== -1) flags.allDiceMin = false;
+        if (r !== 1) flags.allDiceMax = false;
+    }
+}
+
+/* ===========================
+   Parsing de la commande
+=========================== */
+
+export async function parseInput(text) {
+    let rollExpression = "";
+    let hidden = false;
+
+    if (text.startsWith("/r") || text.startsWith("/roll")) {
+        rollExpression = text.replace("/roll", "").replace("/r", "").trim();
+    } else if (text.startsWith("/gr") || text.startsWith("/gmroll")) {
+        rollExpression = text.replace("/gmroll", "").replace("/gr", "").trim();
+        hidden = true;
+    } else {
+        rollExpression = text;
+    }
+
+    if (!rollExpression) return null;
+
+    // Validation large (fonctions + .75)
+    const tokens = rollExpression.match(TOKEN_REGEX);
+    if (!tokens) return null;
+    const validTokenRegex =
+        /^([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)])$/i;
+
+    for (const tok of tokens) {
+        if (!validTokenRegex.test(tok)) return null;
+    }
+
+    return { rollExpression, hidden };
+}
+
+/* ===========================
+   Roll principal (DRY)
+=========================== */
 
 export async function rollExpression(text) {
     const raw = text.toLowerCase().trim();
 
-    // Flags de suivi des dés
-    let anyDiceRolled = false;
-    let allDiceMin = true;  // restera true seulement si TOUS les dés tirés sont au min
-    let allDiceMax = true;  // restera true seulement si TOUS les dés tirés sont au max
-
-    // Dés, dbN, dF(udge), nombres, opérateurs, parenthèses
-    const tokenRegex = /([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)])/gi;
-
-    const tokens = raw.match(tokenRegex).map(t => (/^\.\d+$/.test(t) ? "0" + t : t));
-    if (!tokens) {
+    // Tokenize + normalise
+    const tokensRaw = raw.match(TOKEN_REGEX);
+    if (!tokensRaw) {
         console.error("Impossible de tokeniser l'expression :", raw);
         return null;
     }
+    const tokens = tokensRaw.map(normalizeToken);
 
-    // ── 1) Construire l'expression 'affichée' en développant dbN proprement ──
-    //    (dbN -> "(NdX+Bonus)" ; 2dbN -> "(NdX+Bonus) + (NdX+Bonus)")
+    // Expression affichée (dbN → "(NdX+K)")
     const expandedTokens = tokens.map(tok => {
         const m = tok.match(/^(\d*)db(\d+)$/i);
         if (!m) return tok;
-
-        const count = parseInt(m[1], 10) || 1;
-        const key = `db${m[2]}`.toLowerCase();
-        const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
-        if (!entry) {
-            console.warn(`Définition manquante pour ${key}`);
-            return tok;
-        }
-        const block = `(${entry.value})`;
-        return count > 1 ? Array(count).fill(block).join(" + ") : block;
+        const mult = parseInt(m[1], 10) || 1;
+        const def = findDbDef(m[2]);
+        if (!def) return tok;
+        const block = `(${def.value})`;
+        return mult > 1 ? Array(mult).fill(block).join(" + ") : block;
     });
     const exprExpanded = expandedTokens.join(" ");
 
-    // ── 2) Construire le détail et la valeur numérique ──
+    // Accumulateurs d’évaluation et flags
     const numericTokens = [];
     const detailedTokens = [];
+    const flags = { anyDiceRolled: false, allDiceMin: true, allDiceMax: true };
 
-    for (let tok of tokens) {
-        // a) dbN
+    // Boucle tokens
+    for (const tok of tokens) {
         let m;
+
+        // dbN (avec multiplicateur éventuel)
         if ((m = tok.match(/^(\d*)db(\d+)$/i))) {
             const mult = parseInt(m[1], 10) || 1;
-            const key = `db${m[2]}`.toLowerCase();
-            const entry = DBKeyword.find(e => e.key.toLowerCase() === key);
-            if (!entry) {
-                console.error(`Définition manquante pour ${key}`);
-                continue;
-            }
+            const def = findDbDef(m[2]);
+            if (!def) continue;
 
-            // entry.value du style "NdX+B" (ex: "2d6+8")
-            const parts = entry.value.split("+");
-            const dicePart = parts[0].trim();              // "2d6"
-            const bonus = parts[1] ? parseInt(parts[1].trim(), 10) : 0;
+            const parsed = parseDbValue(def.value);
+            if (!parsed) continue;
 
-            const md = dicePart.match(/^(\d*)d(\d+)$/i);
-            if (!md) {
-                console.error(`Format db invalide: ${entry.value}`);
-                continue;
-            }
-
-            const diceCount = parseInt(md[1], 10) || 1;
-            const faces = parseInt(md[2], 10);
-
+            const { diceCount, faces, bonus } = parsed;
             let sumNumeric = 0;
-            const detailedParts = [];
+            const partsForDetail = [];
 
             for (let i = 0; i < mult; i++) {
-                const rolls = Array.from({ length: diceCount }, () => Math.floor(Math.random() * faces) + 1);
-                // --- MAJ des flags ---
-                anyDiceRolled = true;
-                // min=1, max=faces
-                for (const r of rolls) {
-                    if (r !== 1) allDiceMin = false;
-                    if (r !== faces) allDiceMax = false;
-                }
-                // ---------------------
-                const subSum = rolls.reduce((a, b) => a + b, 0);
-                sumNumeric += subSum + bonus;
-                const formatted = rolls.map(r => {
-                    if (r === 1) return `<span class="min">${r}</span>`;
-                    if (r === faces) return `<span class="max">${r}</span>`;
-                    return `${r}`;
-                });
+                const { rolls, sum } = rollNdX(diceCount, faces);
+                updateMinMaxFlags(rolls, faces, flags);
 
-                detailedParts.push(`[ ${formatted.join(", ")} ]`);
+                const decorated = decorateRolls(rolls, 1, faces);
+                partsForDetail.push(`[ ${decorated} ]`);
+
+                sumNumeric += sum + bonus;
             }
 
-            // Détail lisible : les jets, puis “+ bonus” répété mult fois (jamais en crochets)
-            detailedTokens.push(...detailedParts, ...Array(mult).fill(`+ ${bonus}`));
-            // Numérique : une seule valeur globale
+            detailedTokens.push(...partsForDetail, ...Array(mult).fill(`+ ${bonus}`));
             numericTokens.push(String(sumNumeric));
             continue;
         }
 
-        // b) dF / dFudge
+        // dF(udge)
         if ((m = tok.match(/^(\d*)dF(?:udge)?$/i))) {
             const count = parseInt(m[1], 10) || 4;
-            const rolls = Array.from({ length: count }, () => [-1, 0, 1][Math.floor(Math.random() * 3)]);
-            // --- MAJ des flags ---
-            anyDiceRolled = true;
-            for (const r of rolls) {
-                if (r !== -1) allDiceMin = false;
-                if (r !== 1) allDiceMax = false;
-            }
-            // ---------------------
-            const sum = rolls.reduce((a, b) => a + b, 0);
-            const formatted = rolls.map(r => {
-                if (r === -1) return `<span class="min">${r}</span>`;
-                if (r === 1) return `<span class="max">${r}</span>`;
-                return `${r}`;
-            });
-            detailedTokens.push(`[ ${formatted.join(", ")} ]`);
+            const { rolls, sum } = rollFudge(count);
+            updateMinMaxFlagsFudge(rolls, flags);
+
+            const decorated = decorateRolls(rolls, -1, 1);
+            detailedTokens.push(`[ ${decorated} ]`);
             numericTokens.push(String(sum));
             continue;
         }
 
-        // c) NdX
+        // NdX
         if ((m = tok.match(/^(\d*)d(\d+)$/i))) {
-            const count = parseInt(m[1], 10) || 1;
+            const diceCount = parseInt(m[1], 10) || 1;
             const faces = parseInt(m[2], 10);
-            const rolls = Array.from({ length: count }, () => Math.floor(Math.random() * faces) + 1);
-            // --- MAJ des flags ---
-            anyDiceRolled = true;
-            for (const r of rolls) {
-                if (r !== 1) allDiceMin = false;
-                if (r !== faces) allDiceMax = false;
-            }
-            // ---------------------
-            const sum = rolls.reduce((a, b) => a + b, 0);
-            const formatted = rolls.map(r => {
-                if (r === 1) return `<span class="min">${r}</span>`;
-                if (r === faces) return `<span class="max">${r}</span>`;
-                return `${r}`;
-            });
 
-            detailedTokens.push(`[ ${formatted.join(", ")} ]`);
+            const { rolls, sum } = rollNdX(diceCount, faces);
+            updateMinMaxFlags(rolls, faces, flags);
+
+            const decorated = decorateRolls(rolls, 1, faces);
+            detailedTokens.push(`[ ${decorated} ]`);
             numericTokens.push(String(sum));
             continue;
         }
 
-        // d) nombres, opérateurs, parenthèses
+        // nombres, opérateurs, fonctions mathjs
         detailedTokens.push(tok);
         numericTokens.push(tok);
+    }
+
+    if (!flags.anyDiceRolled) {
+        flags.allDiceMin = false;
+        flags.allDiceMax = false;
     }
 
     const exprDetailed = detailedTokens.join(" ");
     const exprNumeric = numericTokens.join(" ");
 
-    // ── 3) Évaluer le total ──
+    // Évaluation
     let total;
     try {
         total = evaluate(exprNumeric);
@@ -206,21 +244,11 @@ export async function rollExpression(text) {
         return null;
     }
 
-    if (!anyDiceRolled) {
-        allDiceMin = false;
-        allDiceMax = false;
-    }
-
-    console.log(anyDiceRolled, allDiceMin, allDiceMax);
-
     return {
         expression: exprExpanded,
         rolls: exprDetailed,
         total: total,
-        allDiceMin: allDiceMin,
-        allDiceMax: allDiceMax,
+        allDiceMin: flags.allDiceMin,
+        allDiceMax: flags.allDiceMax,
     };
 }
-
-
-
