@@ -1,48 +1,174 @@
 ---
 title: JustDices
-description: A formula-based dice roller
+description: A formula-based dice roller - fast, flexible, and API‑friendly.
 author: Sewef
-image: /
-icon: / 
+image: https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDicesSplash.png
+icon: https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDices.png
 tags:
   - dice
   - automation
 manifest: https://justdices.onrender.com/manifest.json
-learn-more: 
+learn-more: https://github.com/Sewef/justDices/
 ---
 
-
 # JustDices
+JustDices is a fast, flexible dice roller for Owlbear Rodeo, mostly based on Roll20 system.
+Type natural formulas, click a button, or call the broadcast API from other extensions.
+Outputs are clear, color‑coded, and support private GM rolls. Also, it supports Pokemon Tabletop United 1.05 Damage Bases.
 
-### Roll the dices!
-
-## Formula
-* Based on roll20 system
-* `1d20` or `d20` or `D20` will roll 1d20
-* Works with ` +` and ` -` modifiers
-* Example: `1d8+6`
+## Highlights
+- Resizable window, drag and drop any of the corner.
+- Formula engine: NdX, dF/dFudge, PTU Damage Base dbX, arithmetic (`+ - * /`), parentheses.
+- Math functions (via mathjs): e.g. `sqrt(25) + ceil(2.1)`.
+- Crit coloring: per‑die min rolls in red, max rolls in green.
+- Public & GM rolls: `/r` public, `/gr` private to GM + roller.
+- Handy aliases: `max …` or `min …` to force all dice to max/min.
+- History with reroll: one‑click reroll reuses the exact command and preserves public/private.
+- Stateless: no data is saved locally or remotely; reload clears the list.
+- OBR broadcast API: trigger rolls from any extension and receive a structured response.
 
 ## Commands
-* Still based on roll20
-* `/r d20` + `Enter` will roll 1d20 and broadcast the result
-* `/gr d20` + `Enter` will roll 1d20 but only GMs and the player will see the result
-* With no `/r` or `/gr`, the result is broadcasted
-* Example: `/r 1d20`, `1d20` are public rolls, `/gr 1d20` is private
-* Any numbered dice should work
-* DFudge compliant: use `dF` or `dFudge` for 4 classic 4 rolls, or `XdF` for other
-* PokemonTabletopUnited 1.05 compliant: use `dbX` to put the whole Damage Base formula. Also works with `XdbX` (like `2db4` for crits)
+
+`/r <expr>` or `/roll <expr>` → public roll broadcast to the room.
+
+*Example: `/r d20`, `/roll 2d6+3`, `/r max 10d20`*
+
+`/gr <expr>` or `/gmroll <expr>` → private roll visible to GM & roller only.
+
+*Example: `/gr db6`, `/gmroll (2dF + 1)`*
+
+No prefix? JustDices treats it like public (same as `/r`). 
+
+Case‑insensitive: `/R`, `/Gr`, `dFUDGE`, `Db6` all work.
+
+Commands history: press ↑ or ↓ to navigate in previous ran commands.
+
+## Formula Language
+### Core
+- `NdX` → roll N dice with X faces:
+  - `1d20,` `d20`, `D20` → all valid (case‑insensitive).
+  - Works with arithmetic and parentheses: `2d6 + 3`, `(1d8+2) * 2.`
+- QoL for decimals: `10 * .75` is the same as `10 * 0.75`).
+- Math functions (mathjs): e.g. `sqrt(25)`, `abs(-3) + round(2.5)`.
+- Common helpers that work out of the box: `sqrt`, `abs`, `min`, `max`, `ceil`, `floor`, `round`, etc (needs improvements to support more functions).
+
+⚠️ Functions are evaluated by mathjs. Unknown names will throw a parse error.
+
+### Fudge / Fate
+- `dF` or `dFudge` → default 4 dice in the set [-1, 0, 1].
+- Use `XdF` for a custom count: `2dF`, `6dF`, etc.
+
+### PTU Damage Base (Pokemon Tabletop United 1.05)
+- `dbX` expands to a full dice+bonus expression (e.g. `db6` → `2d6+8`).
+- You can multiply a DB block: `2db4` (crits), `3db6`, etc.
+- You can mix DB with regular math: `db6 + 1d4 - 2`.
+
+A built‑in table covers db1 through db28.
+
+### Prefixes
+`max …` → force every die to its maximum value.
+
+*Example: `/r max 10d20` → `[20,20, …]`*
+
+`min …` → force every die to its minimum value.
+
+*Example: `/r min db6` → the internal `d6` rolls will all be `1`.*
+
+Place max/min before the expression: `/r max (db6 + 1d4)`.
 
 ## Buttons
-* Any formula will automatically get `/r` or `/gr` prefix when pressing the "Hidden roll" or "Roll it" button
-* If formula starts with `/r` or `/gr`, clicking the wrong button will throw an error
+- Roll it (⚔️) → sends /r <expr>.
+- Hidden roll (🙈) → sends /gr <expr>.
 
-### Rolls History
+If the formula already starts with the opposite prefix, the UI warns you.
+- Quick Rolls panel (🎲) → opens the Quick Rolls panel (see below)
 
-* Rolls are displayed here, in a box there are:
-  - Player who rolled
-  - Command used
-  - Detailed roll output
-  - Result
-* Min roll is red, max roll is green
-* The Reroll button will send the exact command used again, it can be used by all players but, by the way it's done, will stay public or private roll
-* Rolls History is **not** saved in any local or remote storage, leaving page will empty the history locally
+## Quick Rolls
+- The QuickRolls panel gives you a grid of the most common dice. Just click the amount of dice you want to roll and let it work, the roll is sent like a regular formula.
+- The Toggle hide rolls (🐵/🙈) button toggles between public rolls and hidden rolls.
+- Because of Owlbear limitations, the panel cannot be moved.
+
+## History
+- The typed expression is shown on top of the output card, hovering the manifying glass 🔍 will show the expanded expression.
+- The detailed result shows every die:
+`[ 5, 1 ] + 3`
+- Per‑die coloring:
+  - Min face (e.g., `1` on `d20`) is red.
+  - Max face (e.g., `20` on `d20`) is green.
+- Little animations when all dice are min or max value.
+- "Hidden" rolls are only seen by the GMs and the player who rolled.
+- Clicking on the Reroll (🎲) button on the right of a card will reroll the exact expression.
+- Nothing is saved in the browser, refreshing will clear the local history.
+
+## API
+Make your extension roll dice via OBR broadcasts and get a structured response.
+
+### Request
+```JS
+// Channel: "justdices.api.request"
+OBR.broadcast.sendMessage("justdices.api.request", {
+  callId,        // string: unique id to correlate response
+  requesterId,   // string: await OBR.player.getId()
+  expression,    // string: same syntax as the input box (e.g. "/r 2d6+3", "max 10d20")
+  showInLogs     // boolean (default true): also push to JustDices log
+}, { destination: "ALL" });
+```
+
+### Parameters
+
+- `callId` *(required)* → A unique identifier for this API call. Used to correlate the request and the response.
+- `requesterId` *(required)* → The ID of the player/extension making the request. Usually use the Extension name and/or the player name (`await OBR.player.getId()`).
+- `expression` *(required)* → The formula or full command (`/r`, `/gr`, `max`, `min` etc allowed).
+- `showInLogs` (*optional, default true)* → Whether to also print in the JustDices log.
+
+### Response
+Listen on the response channel and filter by your `callId` & `requesterId`.
+
+```JS
+OBR.broadcast.onMessage("justdices.api.response", (evt) => {
+  const res = evt.data;
+  if (res.callId !== myCallId || res.requesterId !== myRequesterId) return;
+
+  if (res.ok) {
+    console.log("Total:", res.data.total);
+    console.log("Expanded:", res.expressionOut);
+    console.log("Detail (HTML):", res.rolls);
+  } else {
+    console.warn("Roll failed:", res.error);
+  }
+});
+```
+
+#### Response structure (`ok: true`)
+```JS
+{
+  callId: string,
+  requesterId: string,
+  expressionIn: string,      // what you sent
+  ok: true,
+  expressionOut: string,     // expanded display (e.g. "(2d6+8) + 1d4")
+  rolls: string,             // HTML string with colored dice, e.g. "[ 5, <span class='min'>1</span> ] + 3"
+  data: {
+    expression: string,      // same as expressionOut
+    rolls: string,           // same as rolls
+    total: number,
+    allDiceMin: boolean,
+    allDiceMax: boolean
+  }
+}
+```
+
+#### Response shape (`ok: false`)
+```JS
+{
+  callId: string,
+  requesterId: string,
+  expressionIn: string,
+  ok: false,
+  error: "PARSE_ERROR" | "ROLL_ERROR" | string
+}
+```
+#### Typical errors
+- `PARSE_ERROR` → invalid syntax or unsupported tokens.
+- `ROLL_ERROR` → internal failure during evaluation.
+- (Client‑side) `API_TIMEOUT` → no response received before your own timeout.
