@@ -100,7 +100,7 @@ function getTokens(text, mode) {
         if ((match = token.match(/^(\d*)db(\d+)$/i))) {
             newToken = new DBToken(match[1], match[2], ...indexes, mode);
         } else if ((match = token.match(/^(\d*)dF(?:udge)?$/i))) {
-            newToken = new FudgeDiceToken(match[1], ...indexes);
+            newToken = new FudgeDiceToken(match[1], ...indexes, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)$/i))) {
             newToken = new DiceToken(match[1], match[2], ...indexes, mode);
         } else if (token === "\\") {

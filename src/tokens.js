@@ -65,13 +65,13 @@ export class DiceToken extends Token {
 	_ensureRolled() {
 		if (this._rolls && this._value) return;
 		if (this.mode === "min") {
-			this._rolls.fill(1);
-			this._value = this.n;
+			this._rolls = Array(this.n).fill(this.min);
+			this._value = this.n * this.min;
 			return;
 		}
 		if (this.mode === "max") {
-			this._rolls.fill(this.faces);
-			this._value = this.n * this.faces;
+			this._rolls = Array(this.n).fill(this.max);
+			this._value = this.n * this.max;
 			return;
 		}
 		this._rolls = Array.from({ length: this.n }, () => this.diceRoll(this.faces));
@@ -94,10 +94,11 @@ export class DiceToken extends Token {
 
 /** Fudge Dice : NdF */
 export class FudgeDiceToken extends DiceToken {
-	constructor(n, start, end) { super(n, 3, start, end, "normal"); this.min = -1; this.max = 1; }
+	constructor(n, start, end, mode) { super(n, 3, start, end, mode); this.min = -1; this.max = 1; }
 	_ensureRolled() {
 		if (this._rolls) { return true; }
 		super._ensureRolled()
+		if (this.mode !== "normal") return;
 		this._rolls = this._rolls.map((roll) => roll - 2)
 		this._value -= this.n * 2
 	}
