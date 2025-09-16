@@ -246,7 +246,7 @@ async function addLogEntry(eventData) {
           ${eventData.sender.name}:
         </span>
         <span class="log-expression">
-          ${eventData.text.original || eventData.text.expression.split(" (")[0]}
+          ${eventData.text.original || originalCommand}
           <span class="roll-tooltip" title="${escapeHTML(escapeHTML(eventData.text.expression))}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
