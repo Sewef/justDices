@@ -166,7 +166,7 @@ export class DBToken extends Token {
 		if (this.mode === "max") {
 			for (let i = 0; i < this.n; i++) {
 				this._rolls[i] = Array(this.dbN).fill(this.faces);
-				this._value += this.dbN + this.bonus;
+				this._value += this.dbN * this.faces + this.bonus;
 			}
 			return;
 		}
