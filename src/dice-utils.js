@@ -18,7 +18,7 @@ import {
 
 // Tokenizer commun : fonctions, dés, décimaux nus, opérateurs, parenthèses
 const TOKEN_REGEX =
-    /([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/gi;
+    /([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
 
 /* ===========================
    Utilitaires
@@ -67,7 +67,7 @@ export async function parseInput(text) {
     const tokens = rollExpression.match(TOKEN_REGEX);
     if (!tokens) return null;
     const validTokenRegex =
-        /^([a-zA-Z_][a-zA-Z0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/i;
+        /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
 
     for (const tok of tokens) {
         if (!validTokenRegex.test(tok)) return null;
@@ -107,7 +107,7 @@ function getTokens(text, mode) {
             escaped = true;
             index = indexes.end;
             continue;
-        } else if (!escaped && ["(",")"].includes(token)) {
+        } else if (!escaped && ["(", ")"].includes(token)) {
             newToken = new ParenToken(token, ...indexes);
         } else if (!escaped && ["+", "-", "*", "/"].includes(token)) {
             newToken = new OperatorToken(token, ...indexes);
