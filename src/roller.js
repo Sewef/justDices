@@ -236,7 +236,7 @@ async function addLogEntry(eventData) {
     newEntry.style.borderColor = eventData.sender.color;
   }
 
-  const originalCommand = eventData.text.expression.split(" (")[0];
+  const originalCommand = eventData.text.original;
 
   newEntry.innerHTML = `
     <div class="log-entry">
@@ -257,7 +257,7 @@ async function addLogEntry(eventData) {
  = 
         <span class="log total">${eventData.text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${originalCommand}" title="Reroll">
+      <button class="reroll-button" data-command="${eventData.text.original}" title="Reroll">
         <span class="dice-icon">🎲</span>
       </button>
     </div>
