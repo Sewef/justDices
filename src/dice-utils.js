@@ -18,7 +18,10 @@ import {
 
 // Tokenizer commun : fonctions, dés, décimaux nus, opérateurs, parenthèses
 const TOKEN_REGEX =
-    /([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
+    /([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|>=|<=|[\+\-\*\/\(\)\\><?=;:|&])/giu;
+const DB_TOKEN = /^(\d*)db(\d+)$/i;
+const FUDGE_TOKEN = /^(\d*)dF(?:udge)?$/i;
+const DICE_TOKEN = /^(\d*)d(\d+)$/i;
 
 /* ===========================
    Utilitaires
@@ -42,44 +45,75 @@ function isMathJsMethod(str) {
 =========================== */
 
 export async function parseInput(text) {
-    let rollExpression = "";
-    let hidden = false;
+    let hidden = text.startsWith("/gr") || text.startsWith("/gmroll");
+    let rollExpression = text
+        .replace("/gmroll ", "")
+        .replace("/gr ", "")
+        .replace("/roll ", "")
+        .replace("/r ", "")
 
-    if (text.startsWith("/r") || text.startsWith("/roll")) {
-        rollExpression = text.replace("/roll", "").replace("/r", "").trim();
-    } else if (text.startsWith("/gr") || text.startsWith("/gmroll")) {
-        rollExpression = text.replace("/gmroll", "").replace("/gr", "").trim();
-        hidden = true;
-    } else {
-        rollExpression = text;
-    }
-
+    // TODO: throw a clean error when managing errors correctly
     if (!rollExpression) return null;
 
     let mode = "normal";
     const modeMatch = rollExpression.match(/^(max|min)\b/i);
     if (modeMatch) {
         mode = modeMatch[1].toLowerCase();
-        rollExpression = rollExpression.slice(modeMatch[0].length).trim();
+        rollExpression = rollExpression.replace(modeMatch[1], "").trim()
     }
 
     // Validation large (fonctions + .75)
-    const tokens = rollExpression.match(TOKEN_REGEX);
-    if (!tokens) return null;
+    const rawTokens = rollExpression.match(TOKEN_REGEX);
+    // TODO: throw a clean error when managing errors correctly
+    if (!rawTokens) return null;
     const validTokenRegex =
-        /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+        /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|>=|<=|[\+\-\*\/\(\)\\><?=;:|&])$/iu;
 
-    for (const tok of tokens) {
+    for (const tok of rawTokens) {
+        // TODO: throw a clean error when managing errors correctly
         if (!validTokenRegex.test(tok)) return null;
     }
     console.log(rollExpression);
 
-    return { rollExpression, hidden, mode };
+    const tokens = getTokens(rollExpression, mode)
+    return { tokens, hidden };
 }
 
-/* ===========================
-   Roll principal (DRY)
-=========================== */
+const tokenBuilders = [
+    {
+        test: token => token.match(DB_TOKEN),
+        build: (match, idx, _token, mode) => new DBToken(match[1], match[2], ...idx, mode)
+    }, {
+        test: token => token.match(FUDGE_TOKEN),
+        build: (match, idx, _token, mode) => new FudgeDiceToken(match[1], ...idx, mode)
+    }, {
+        test: token => token.match(DICE_TOKEN),
+        build: (match, idx, _token, mode) => new DiceToken(match[1], match[2], ...idx, mode)
+    }, {
+        test: token => ["(", ")"].includes(token),
+        build: (_match, idx, token, _mode) => new ParenToken(token, ...idx)
+    }, {
+        test: token => ["+", "-", "*", "/", ">=", "<=", ":", "?", ">", "<", ";", "|", "&"].includes(token),
+        build: (_match, idx, token, _mode) => new OperatorToken(token, ...idx)
+    }, {
+        test: token => isNumeric(token),
+        build: (_match, idx, token, _mode) => new DigitToken(token, ...idx)
+    }, {
+        test: _token => true,
+        build: (_match, idx, token, _mode) => new FunctionToken(token, ...idx)
+    },
+];
+
+function buildToken(token, indexes, mode, escaped) {
+    if (escaped) return new TextToken(token, ...indexes);
+
+    for (const { test, build } of tokenBuilders) {
+        const match = test(token);
+        if (match) return build(match, indexes, token, mode);
+    }
+
+    return new TextToken(token, ...indexes);
+};
 
 function getTokens(text, mode) {
     const raw = text.toLowerCase().trim();
@@ -88,48 +122,35 @@ function getTokens(text, mode) {
     if (!tokensRaw) {
         console.error("Impossible de tokeniser l'expression :", raw);
         return null;
-    }
-    let match;
-    let index = 0;
+    }    
+
+    let cursor = 0;
     let escaped = false;
     const tokens = [];
+
     console.log("raw tokens:", tokensRaw);
     for (const token of tokensRaw) {
-        const indexes = [index, index + token.length];
-        let newToken;
-        if ((match = token.match(/^(\d*)db(\d+)$/i))) {
-            newToken = new DBToken(match[1], match[2], ...indexes, mode);
-        } else if ((match = token.match(/^(\d*)dF(?:udge)?$/i))) {
-            newToken = new FudgeDiceToken(match[1], ...indexes, mode);
-        } else if ((match = token.match(/^(\d*)d(\d+)$/i))) {
-            newToken = new DiceToken(match[1], match[2], ...indexes, mode);
-        } else if (token === "\\") {
+        const indexes = [cursor, cursor + token.length];
+        if (token === "\\") {
             escaped = true;
-            index = indexes.end;
+            cursor = indexes[1];
             continue;
-        } else if (!escaped && ["(", ")"].includes(token)) {
-            newToken = new ParenToken(token, ...indexes);
-        } else if (!escaped && ["+", "-", "*", "/"].includes(token)) {
-            newToken = new OperatorToken(token, ...indexes);
-        } else if (!escaped && isNumeric(token)) {
-            newToken = new DigitToken(token, ...indexes);
-        } else if (!escaped && isMathJsMethod(token)) {
-            newToken = new FunctionToken(token, ...indexes);
-        } else {
-            newToken = new TextToken(token, ...indexes);
-            escaped = false;
         }
-        tokens.push(newToken);
-        index = indexes.end;
+
+        tokens.push(buildToken(token, indexes, mode, escaped));
+        escaped = false;
+        cursor = indexes[1];
     }
+
     console.log("token objects", tokens);
     return tokens;
 }
 
+/* ===========================
+   Roll principal (DRY)
+=========================== */
 
-export async function rollExpression(text, mode = "normal") {
-    const tokens = getTokens(text, mode);
-
+export async function rollExpression(tokens) {
     let displayExpr = "";
     let calcExpr = "";
 
@@ -141,16 +162,19 @@ export async function rollExpression(text, mode = "normal") {
     let total;
     try {
         if (calcExpr.trim() !== "") {
+            //TODO: Gérer les multiples retours qui renvoient un object (essaye a=5;a+2)
             total = evaluate(calcExpr);
-            total = Number(total.toPrecision(12));
+            console.log(total.entries)
+            if (typeof total === "number") {
+                total = Number(total.toPrecision(12));
+            }
         }
-    } catch (e) {
-        console.error("Erreur d'évaluation mathjs :", calcExpr, e);
+    } catch (error) {
+        console.error("Erreur d'évaluation mathjs :", calcExpr, error);
         return null;
     }
 
     return {
-        expression: text,
         rolls: displayExpr,
         total: total || 0,
         allDiceMin: tokens.some(token => token._rolls) && tokens.every(token => token.allFumble),

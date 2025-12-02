@@ -23,7 +23,7 @@ export class Token {
 export class DigitToken extends Token {
 	constructor(num, start, end) {
 		super(start, end);
-		this.num = num.startsWith(".") ? `0.${num}` : num;
+		this.num = num.startsWith(".") ? `0${num}` : num;
 	}
 	get display() { return String(this.num); }
 	get value() { return String(this.num); }

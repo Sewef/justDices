@@ -173,7 +173,7 @@ export async function submitInput(text) {
   }
 
   // 2. Lance les dés
-  const rollResult = await rollExpression(parsedInput.rollExpression, parsedInput.mode);
+  const rollResult = await rollExpression(parsedInput.tokens);
   if (!rollResult) {
     console.error("rollExpression returned null.");
     triggerInputError("Dice roll failed (syntax error?).");
@@ -184,7 +184,9 @@ export async function submitInput(text) {
   // 3. Construit l’objet de résultat en utilisant exprDetailed / exprNumeric
   const resultStr = {
     // Affiche l’input original, puis l’expression numérique entre parenthèses
-    expression: `${text} (${rollResult.expression})`,
+    // TODO: In the refact, I removed the numerical expression from calculating (didnt know what used for).
+    // To have the developped expression (db developped) into the parenthesis again, we need to code it again (OOPS)
+    expression: `${text} (feature KC)`,
     // Dans 'rolls', on met le détail formaté
     rolls: rollResult.rolls,
     total: rollResult.total,
