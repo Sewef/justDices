@@ -236,7 +236,7 @@ async function addLogEntry(eventData) {
     newEntry.style.borderColor = eventData.sender.color;
   }
 
-  const originalCommand = eventData.text.original;
+  const originalCommand = eventData.text.original || eventData.text.expression;
 
   newEntry.innerHTML = `
     <div class="log-entry">
@@ -246,7 +246,7 @@ async function addLogEntry(eventData) {
           ${eventData.sender.name}:
         </span>
         <span class="log-expression">
-          ${eventData.text.original || originalCommand}
+          ${originalCommand}
           <span class="roll-tooltip" title="${escapeHTML(escapeHTML(eventData.text.expression))}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
