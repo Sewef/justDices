@@ -181,10 +181,10 @@ export async function submitInput(text) {
   }
 
 
-  // 3. Construit l’objet de résultat en utilisant exprDetailed / exprNumeric
+  // 3. Construit l'objet de résultat
   const resultStr = {
-    // Affiche l’input original, puis l’expression numérique entre parenthèses
-    expression: `${text} (${rollResult.expression})`,
+    // Expression étendue (db4 → 1d8+6)
+    expressionExpanded: rollResult.expanded,
     // Dans 'rolls', on met le détail formaté
     rolls: rollResult.rolls,
     total: rollResult.total,
@@ -208,6 +208,7 @@ export async function submitInput(text) {
 }
 
 function escapeHTML(str) {
+  if (!str) return "";
   return str
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
@@ -247,7 +248,7 @@ async function addLogEntry(eventData) {
         </span>
         <span class="log-expression">
           ${originalCommand}
-          <span class="roll-tooltip" title="${escapeHTML(escapeHTML(eventData.text.expression))}">🔍</span>
+          <span class="roll-tooltip" title="${escapeHTML(eventData.text.expressionExpanded || originalCommand)}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
           <span class="rolls-content">${eventData.text.rolls}</span>

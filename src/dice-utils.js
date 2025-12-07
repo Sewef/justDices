@@ -132,10 +132,12 @@ export async function rollExpression(text, mode = "normal") {
 
     let displayExpr = "";
     let calcExpr = "";
+    let expandedExpr = "";
 
     for (const token of tokens) {
         displayExpr += ` ${token.display}`;
         calcExpr += ` ${token.value}`;
+        expandedExpr += ` ${token.expanded}`;
     }
 
     let total;
@@ -151,6 +153,7 @@ export async function rollExpression(text, mode = "normal") {
 
     return {
         expression: text,
+        expanded: expandedExpr.trim(),
         rolls: displayExpr,
         total: total || 0,
         allDiceMin: tokens.some(token => token._rolls) && tokens.every(token => token.allFumble),

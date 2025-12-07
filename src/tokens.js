@@ -15,6 +15,13 @@ export class Token {
 	diceRoll(faces) { return Math.floor(Math.random() * faces) + 1; }
 	get display() { throw new Error("abstract: display"); }
 	get value() { throw new Error("abstract: value"); }
+	get expanded() { 
+		try {
+			return this.value || "";
+		} catch {
+			return "";
+		}
+	}
 	get allFumble() { return true; }
 	get allCrit() { return true; }
 }
@@ -90,6 +97,7 @@ export class DiceToken extends Token {
 	}
 	get allFumble() { return this._rolls.every(roll => roll === this.min); }
 	get allCrit() { return this._rolls.every(roll => roll === this.max); }
+	get expanded() { return `${this.n}d${this.faces}`; }
 }
 
 /** Fudge Dice : NdF */
@@ -102,6 +110,7 @@ export class FudgeDiceToken extends DiceToken {
 		this._rolls = this._rolls.map((roll) => roll - 2)
 		this._value -= this.n * 2
 	}
+	get expanded() { return `${this.n}dF`; }
 }
 
 /** Damage Base (PTU): NDbX */
@@ -203,6 +212,10 @@ export class DBToken extends Token {
 
 	get allFumble() { return this._allRollsEqualTo(1) }
 	get allCrit() { return this._allRollsEqualTo(this.faces) }
+	get expanded() {
+		const diceNotation = `${this.n > 1 ? this.n + '×(' : ''}${this.dbN}d${this.faces}+${this.bonus}${this.n > 1 ? ')' : ''}`;
+		return diceNotation;
+	}
 }
 
 /** Fonction : Mathjs */

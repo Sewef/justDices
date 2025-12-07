@@ -65,10 +65,11 @@ export function setupJustDicesApi() {
       }
 
       const textForLog = {
-        expression: `${req.expression} (${roll.expression})`,
+        expressionExpanded: roll.expanded,
         rolls: roll.rolls,
         total: roll.total,
         hidden: !!parsed.hidden,
+        original: req.expression,
         allDiceMin: roll.allDiceMin,
         allDiceMax: roll.allDiceMax,
       };
