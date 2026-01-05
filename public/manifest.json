@@ -1,6 +1,6 @@
 {
     "name": "JustDices",
-    "version": "1.0.31",
+    "version": "1.0.30.3",
     "description" : "A Roll20-like dice roller for Owlbear Rodeo",
     "manifest_version": 1,
     "author": "Sewef",

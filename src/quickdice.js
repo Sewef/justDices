@@ -2,18 +2,18 @@ import OBR from "@owlbear-rodeo/sdk";
 import { submitInput } from './roller.js';
 
 export async function toggleDicePanel() {
-    console.log("JustDices: Toggling dice panel");
+    // console.log("JustDices: Toggling dice panel");
     const metadata = await OBR.player.getMetadata();
     const dicePanelOpen = metadata["justdices.dicePanelOpen"] === true;
 
     if (dicePanelOpen) {
-        console.log("JustDices: Closing dice panel");
+        // console.log("JustDices: Closing dice panel");
         OBR.popover.close("justdices.quickdice");
         await OBR.player.setMetadata({ "justdices.dicePanelOpen": false });
         return;
     }
 
-    console.log("JustDices: Opening dice panel");
+    // console.log("JustDices: Opening dice panel");
     const anchor = document.getElementById("justdicesApp");
     OBR.popover.open({
         id: "justdices.quickdice",
@@ -58,7 +58,7 @@ export async function setupQuickDice() {
 
     if (!closeDicePanelBtn.dataset.listenerAdded) {
         closeDicePanelBtn.addEventListener('click', () => {
-            console.log("JustDices: Closing dice panel from button");
+            // console.log("JustDices: Closing dice panel from button");
             toggleDicePanel();
         });
         closeDicePanelBtn.dataset.listenerAdded = "true";

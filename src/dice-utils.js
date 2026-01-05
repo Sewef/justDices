@@ -72,7 +72,7 @@ export async function parseInput(text) {
     for (const tok of tokens) {
         if (!validTokenRegex.test(tok)) return null;
     }
-    console.log(rollExpression);
+    // console.log(rollExpression);
 
     return { rollExpression, hidden, mode };
 }
@@ -93,7 +93,7 @@ function getTokens(text, mode) {
     let index = 0;
     let escaped = false;
     const tokens = [];
-    console.log("raw tokens:", tokensRaw);
+    // console.log("raw tokens:", tokensRaw);
     for (const token of tokensRaw) {
         const indexes = [index, index + token.length];
         let newToken;
@@ -122,7 +122,7 @@ function getTokens(text, mode) {
         tokens.push(newToken);
         index = indexes.end;
     }
-    console.log("token objects", tokens);
+    // console.log("token objects", tokens);
     return tokens;
 }
 
