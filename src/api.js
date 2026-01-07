@@ -52,7 +52,7 @@ export function setupJustDicesApi() {
       // console.log("[API] Parsed input", parsed);
       if (!parsed) {
         console.error("[API] Parse failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "PARSE_ERROR", destination: "ALL" });
+        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "PARSE_ERROR", destination: "LOCAL" });
         return;
       }
 
@@ -60,7 +60,7 @@ export function setupJustDicesApi() {
       // console.log("[API] Roll result", roll);
       if (!roll) {
         console.error("[API] Roll failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "ROLL_ERROR", destination: "ALL" });
+        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "ROLL_ERROR", destination: "LOCAL" });
         return;
       }
 
@@ -89,10 +89,10 @@ export function setupJustDicesApi() {
       };
       // console.log("[API] Sending response", response);
 
-      await OBR.broadcast.sendMessage("justdices.api.response", response, {destination: "ALL"});
+      await OBR.broadcast.sendMessage("justdices.api.response", response, {destination: "LOCAL"});
     } catch (e) {
       console.error("[API] Exception during roll", e);
-      await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: String(e), destination: "ALL" });
+      await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: String(e), destination: "LOCAL" });
     }
   });
 }
