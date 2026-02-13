@@ -8,8 +8,8 @@ const decorateRoll = (roll, minVal, maxVal) =>
 
 export class Token {
 	constructor(start, end) {
-		this.start = start; // index début dans la source
-		this.end = end;     // index fin exclu
+		this.start = start; // start index in source
+		this.end = end;     // end index (excluded)
 	}
 	diceRoll(faces) { return Math.floor(Math.random() * faces) + 1; }
 	get display() { throw new Error("abstract: display"); }
@@ -25,7 +25,7 @@ export class Token {
 	get allCrit() { return true; }
 }
 
-/** Nombre littéral */
+/** Numeric literal */
 export class DigitToken extends Token {
 	constructor(num, start, end) {
 		super(start, end);
@@ -35,28 +35,28 @@ export class DigitToken extends Token {
 	get value() { return this.num; }
 }
 
-/** Texte (affiché seulement) — renvoie 0 pour value */
+/** Text (display only) — returns 0 for value */
 export class TextToken extends Token {
 	constructor(text, start, end) { super(start, end); this.text = text; }
 	get display() { return this.text; }
 	get value() { return ""; }
 }
 
-/** Opérateur binaire */
+/** Binary operator */
 export class OperatorToken extends Token {
 	constructor(op, start, end) { super(start, end); this.op = op; }
 	get display() { return this.op; }
 	get value() { return this.op }
 }
 
-/** Parentheses pour grouping */
+/** Parentheses for grouping */
 export class ParenToken extends Token {
-	constructor(kind, start, end) { super(start, end); this.kind = kind; } // '(' ou ')'
+	constructor(kind, start, end) { super(start, end); this.kind = kind; } // '(' or ')'
 	get display() { return this.kind; }
 	get value() { return this.kind; }
 }
 
-/** Dés : NdX */
+/** Dice: NdX */
 export class DiceToken extends Token {
 	constructor(n, faces, start, end, mode = "normal") {
 		super(start, end);
@@ -98,7 +98,7 @@ export class DiceToken extends Token {
 	get expanded() { return `${this.n}d${this.faces}`; }
 }
 
-/** Dés explosifs : NdX! ou NdX!>=N */
+/** Exploding dice: NdX! or NdX!>=N */
 export class ExplodeDiceToken extends Token {
 	constructor(n, faces, explodeThreshold, start, end, mode = "normal") {
 		super(start, end);
@@ -117,7 +117,7 @@ export class ExplodeDiceToken extends Token {
 		for (let i = 0; i < this.n; i++) {
 			let roll = this.diceRoll(this.faces);
 			allRolls.push(roll);
-			// Explose si le résultat atteint le threshold
+			// Reroll if result meets or exceeds threshold
 			while (roll >= this.explodeThreshold) {
 				roll = this.diceRoll(this.faces);
 				allRolls.push(roll);
@@ -132,13 +132,13 @@ export class ExplodeDiceToken extends Token {
 			this._rolls = Array(this.n).fill(this.min);
 			this._value = this.n * this.min;
 		} else if (this.mode === "max") {
-			// En mode max, on simule l'explosion jusqu'au max possible
+			// In max mode, simulate explosion until max possible
 			this._rolls = [];
 			let totalValue = 0;
 			for (let i = 0; i < this.n; i++) {
 				this._rolls.push(this.max);
 				totalValue += this.max;
-				// Continuer à ajouter des max jusqu'à atteindre le seuil
+				// Continue adding max rolls until threshold is reached
 				if (this.max >= this.explodeThreshold) {
 					this._rolls.push(this.max);
 					totalValue += this.max;
@@ -163,14 +163,14 @@ export class ExplodeDiceToken extends Token {
 	}
 
 	get allFumble() { return this._rolls?.every(r => r === this.min) ?? true; }
-	get allCrit() { return this._rolls?.length > this.n; } // Crit si on a des explosions
+	get allCrit() { return this._rolls?.length > this.n; } // Crit if there are explosions
 	get expanded() { 
 		const threshold = this.explodeThreshold === this.faces ? "" : `>=${this.explodeThreshold}`;
 		return `${this.n}d${this.faces}!${threshold}`; 
 	}
 }
 
-/** Dés conservés/supprimés : 4d6k3 ou 4d6d1 */
+/** Keep/Drop dice: 4d6k3 or 4d6d1 */
 export class KeepDropDiceToken extends Token {
 	constructor(n, faces, keepCount, dropCount, start, end, mode = "normal") {
 		super(start, end);
@@ -191,16 +191,16 @@ export class KeepDropDiceToken extends Token {
 	}
 
 	_computeDroppedIndices(rolls) {
-		// Créer un array avec indices: [{value: 3, index: 0}, ...]
+		// Create array with indices: [{value: 3, index: 0}, ...]
 		const indexed = rolls.map((value, index) => ({ value, index }));
 		
-		// Trier par valeur
+		// Sort by value
 		const sorted = [...indexed].sort((a, b) => a.value - b.value);
 		
-		// Déterminer combien à drop/keep
+		// Determine how many to drop/keep
 		const dropCount = this.dropCount > 0 ? this.dropCount : Math.max(0, rolls.length - this.keepCount);
 		
-		// Les indices à drop sont les 'dropCount' premiers du tri
+		// Indices to drop are the first 'dropCount' from sorted
 		const droppedIndices = new Set(sorted.slice(0, dropCount).map(item => item.index));
 		
 		return droppedIndices;
@@ -217,10 +217,10 @@ export class KeepDropDiceToken extends Token {
 			this._rolls = this._rollDice();
 		}
 		
-		// Calculer les indices supprimés
+		// Compute dropped indices
 		this._droppedIndices = this._computeDroppedIndices(this._rolls);
 		
-		// Calculer la somme des dés non supprimés
+		// Calculate sum of non-dropped dice
 		this._value = this._rolls.reduce((sum, val, idx) => {
 			return this._droppedIndices.has(idx) ? sum : sum + val;
 		}, 0);
@@ -259,7 +259,7 @@ export class KeepDropDiceToken extends Token {
 	}
 }
 
-/** Fudge Dice : NdF */
+/** Fudge Dice: NdF */
 export class FudgeDiceToken extends DiceToken {
 	constructor(n, start, end, mode) { 
 		super(n, 3, start, end, mode); 
@@ -280,7 +280,7 @@ export class FudgeDiceToken extends DiceToken {
 /** Damage Base (PTU): NDbX */
 export class DBToken extends Token {
 	static damageBases = [
-		null,                // index 0 -> inutilisé
+		null,                // index 0 -> unused
 		{ n: 1, faces: 6, bonus: 1 },   // db1
 		{ n: 1, faces: 6, bonus: 3 },   // db2
 		{ n: 1, faces: 6, bonus: 5 },   // db3
@@ -372,7 +372,7 @@ export class DBToken extends Token {
 	}
 }
 
-/** Fonction : Mathjs */
+/** Function: Mathjs */
 export class FunctionToken extends Token {
 	constructor(name, start, end) {
 		super(start, end);

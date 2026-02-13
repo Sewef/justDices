@@ -15,15 +15,15 @@ import {
 
 
 /* ===========================
-   Tables & Constantes
+   Tables & Constants
 =========================== */
 
-// Tokenizer commun : fonctions, dés, décimaux nus, opérateurs, parenthèses
+// Common tokenizer: functions, dice, bare decimals, operators, parentheses
 const TOKEN_REGEX =
     /([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
 
 /* ===========================
-   Utilitaires
+   Utilities
 =========================== */
 
 const isNumeric = str => /^[-+]?(?:\d+|\d*\.\d+)$/.test(str.trim());
@@ -37,7 +37,7 @@ const isMathJsMethod = str => {
 };
 
 /* ===========================
-   Parsing de la commande
+   Parsing input command
 =========================== */
 
 export async function parseInput(text) {
@@ -83,14 +83,14 @@ export async function parseInput(text) {
 }
 
 /* ===========================
-   Roll principal (DRY)
+   Main roll (DRY)
 =========================== */
 
 function getTokens(text, mode) {
     const raw = text.toLowerCase().trim();
     const tokensRaw = raw.match(TOKEN_REGEX);
     if (!tokensRaw) {
-        console.error("Impossible de tokeniser l'expression :", raw);
+        console.error("Impossible to tokenize expression:", raw);
         return null;
     }
 
@@ -101,20 +101,19 @@ function getTokens(text, mode) {
     for (const token of tokensRaw) {
         const [start, end] = [index, index + token.length];
         let newToken, match;
-
         if ((match = token.match(/^(\d*)db(\d+)$/i))) {
             newToken = new DBToken(match[1], match[2], start, end, mode);
         } else if ((match = token.match(/^(\d*)dF(?:udge)?$/i))) {
             newToken = new FudgeDiceToken(match[1], start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)!(?:>=(\d+))?$/i))) {
-            // Dés explosifs : 4d6! ou 4d6!>=5
+            // Exploding dice: 4d6! or 4d6!>=5
             const threshold = match[3] ? parseInt(match[3], 10) : parseInt(match[2], 10);
             newToken = new ExplodeDiceToken(match[1], match[2], threshold, start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)k(\d+)$/i))) {
-            // Dés conservés : 4d6k3
+            // Keep dice: 4d6k3
             newToken = new KeepDropDiceToken(match[1], match[2], parseInt(match[3], 10), null, start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)d(\d+)$/i))) {
-            // Dés supprimés : 4d6d1
+            // Drop dice: 4d6d1
             newToken = new KeepDropDiceToken(match[1], match[2], null, parseInt(match[3], 10), start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)$/i))) {
             newToken = new DiceToken(match[1], match[2], start, end, mode);
@@ -158,7 +157,7 @@ export async function rollExpression(text, mode = "normal") {
     try {
         total = calcExpr.trim() ? Number(evaluate(calcExpr).toPrecision(12)) : 0;
     } catch (e) {
-        console.error("Erreur d'évaluation mathjs :", calcExpr, e);
+        console.error("mathjs evaluation error:", calcExpr, e);
         return null;
     }
 
