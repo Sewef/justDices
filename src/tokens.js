@@ -1,11 +1,10 @@
 import { CalcError } from "./errors.js";
 
-function decorateRoll(roll, minVal, maxVal) {
-	if (minVal === maxVal) return String(roll);
-	if (roll === minVal) return `<span class="min">${roll}</span>`;
-	if (roll === maxVal) return `<span class="max">${roll}</span>`;
-	return String(roll);
-}
+const decorateRoll = (roll, minVal, maxVal) => 
+	minVal === maxVal ? String(roll) : 
+	roll === minVal ? `<span class="min">${roll}</span>` :
+	roll === maxVal ? `<span class="max">${roll}</span>` :
+	String(roll);
 
 export class Token {
 	constructor(start, end) {
@@ -32,8 +31,8 @@ export class DigitToken extends Token {
 		super(start, end);
 		this.num = num.startsWith(".") ? `0.${num}` : num;
 	}
-	get display() { return String(this.num); }
-	get value() { return String(this.num); }
+	get display() { return this.num; }
+	get value() { return this.num; }
 }
 
 /** Texte (affiché seulement) — renvoie 0 pour value */
@@ -69,46 +68,50 @@ export class DiceToken extends Token {
 		this._rolls = null;
 		this._value = 0;
 	}
+	_rollDice() {
+		return Array.from({ length: this.n }, () => this.diceRoll(this.faces));
+	}
 	_ensureRolled() {
 		if (this._rolls && this._value) return;
 		if (this.mode === "min") {
 			this._rolls = Array(this.n).fill(this.min);
 			this._value = this.n * this.min;
-			return;
-		}
-		if (this.mode === "max") {
+		} else if (this.mode === "max") {
 			this._rolls = Array(this.n).fill(this.max);
 			this._value = this.n * this.max;
-			return;
+		} else {
+			this._rolls = this._rollDice();
+			this._value = this._rolls.reduce((a, b) => a + b, 0);
 		}
-		this._rolls = Array.from({ length: this.n }, () => this.diceRoll(this.faces));
-		this._value = this._rolls.reduce((acc, current) => acc + current);
-		return;
 	}
 	get display() {
 		this._ensureRolled();
-		const rolls_decorated = this._rolls.map((roll) => decorateRoll(roll, this.min, this.max));
-		const rolls = `[ ${rolls_decorated.join(", ")} ]`;
-		return rolls;
+		const decorated = this._rolls.map(r => decorateRoll(r, this.min, this.max));
+		return `[ ${decorated.join(", ")} ]`;
 	}
 	get value() {
 		this._ensureRolled();
 		return String(this._value);
 	}
-	get allFumble() { return this._rolls.every(roll => roll === this.min); }
-	get allCrit() { return this._rolls.every(roll => roll === this.max); }
+	get allFumble() { return this._rolls?.every(r => r === this.min) ?? true; }
+	get allCrit() { return this._rolls?.every(r => r === this.max) ?? true; }
 	get expanded() { return `${this.n}d${this.faces}`; }
 }
 
 /** Fudge Dice : NdF */
 export class FudgeDiceToken extends DiceToken {
-	constructor(n, start, end, mode) { super(n, 3, start, end, mode); this.min = -1; this.max = 1; }
+	constructor(n, start, end, mode) { 
+		super(n, 3, start, end, mode); 
+		this.min = -1; 
+		this.max = 1; 
+	}
 	_ensureRolled() {
-		if (this._rolls) { return true; }
-		super._ensureRolled()
-		if (this.mode !== "normal") return;
-		this._rolls = this._rolls.map((roll) => roll - 2)
-		this._value -= this.n * 2
+		if (this._rolls) return;
+		super._ensureRolled();
+		if (this.mode === "normal") {
+			this._rolls = this._rolls.map(r => r - 2);
+			this._value -= this.n * 2;
+		}
 	}
 	get expanded() { return `${this.n}dF`; }
 }
@@ -165,44 +168,34 @@ export class DBToken extends Token {
 
 	_ensureRolled() {
 		if (this._rolls && this._value) return;
+		const multiplyBonus = this.n;
+		
 		if (this.mode === "min") {
-			for (let i = 0; i < this.n; i++) {
-				this._rolls[i] = Array(this.dbN).fill(1);
-				this._value += this.dbN + this.bonus;
-			}
-			return;
+			this._rolls = Array(this.n).fill(Array(this.dbN).fill(1));
+			this._value = multiplyBonus * (this.dbN + this.bonus);
+		} else if (this.mode === "max") {
+			this._rolls = Array(this.n).fill(Array(this.dbN).fill(this.faces));
+			this._value = multiplyBonus * (this.dbN * this.faces + this.bonus);
+		} else {
+			this._rolls = Array.from({ length: this.n }, () => 
+				Array.from({ length: this.dbN }, () => this.diceRoll(this.faces))
+			);
+			this._value = this._rolls.reduce((sum, subRoll) => 
+				sum + subRoll.reduce((a, b) => a + b, 0) + this.bonus, 0
+			);
 		}
-		if (this.mode === "max") {
-			for (let i = 0; i < this.n; i++) {
-				this._rolls[i] = Array(this.dbN).fill(this.faces);
-				this._value += this.dbN * this.faces + this.bonus;
-			}
-			return;
-		}
-		for (let i = 0; i < this.n; i++) {
-			this._rolls[i] = Array.from({ length: this.dbN }, () => this.diceRoll(this.faces));
-			this._value += this._rolls[i].reduce((acc, current) => acc + current);
-			this._value += this.bonus;
-		}
-		return;
 	}
 
 	_allRollsEqualTo(number) {
-		for (const subRoll of this._rolls) {
-			if (subRoll.some(roll => roll !== number)) {
-				return false
-			}
-		}
-		return true
+		return this._rolls.every(subRoll => subRoll.every(r => r === number));
 	}
 
 	get display() {
 		this._ensureRolled();
-		const decorateRollCB = (roll) => decorateRoll(roll, 1, this.faces)
-		const rolls_decorated = this._rolls.map((subRoll) => subRoll.map(decorateRollCB).join(", "))
-		const rolls = `[ ${rolls_decorated.join(" ] + [ ")} ]`;
-		const rollsAndBonuses = rolls + ` + ${this.bonus}`.repeat(this.n);
-		return rollsAndBonuses;
+		const rollsStr = this._rolls
+			.map(subRoll => subRoll.map(r => decorateRoll(r, 1, this.faces)).join(", "))
+			.join(` ] + [ `);
+		return `[ ${rollsStr} ] + ${this.bonus}`.repeat(this.n);
 	}
 
 	get value() {
@@ -210,11 +203,11 @@ export class DBToken extends Token {
 		return String(this._value);
 	}
 
-	get allFumble() { return this._allRollsEqualTo(1) }
-	get allCrit() { return this._allRollsEqualTo(this.faces) }
+	get allFumble() { return this._allRollsEqualTo(1); }
+	get allCrit() { return this._allRollsEqualTo(this.faces); }
 	get expanded() {
-		const diceNotation = `${this.n > 1 ? this.n + '×(' : ''}${this.dbN}d${this.faces}+${this.bonus}${this.n > 1 ? ')' : ''}`;
-		return diceNotation;
+		const inner = `${this.dbN}d${this.faces}+${this.bonus}`;
+		return this.n > 1 ? `${this.n}×(${inner})` : inner;
 	}
 }
 

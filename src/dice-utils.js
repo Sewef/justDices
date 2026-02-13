@@ -24,55 +24,44 @@ const TOKEN_REGEX =
    Utilitaires
 =========================== */
 
-function isNumeric(str) {
-    return /^[-+]?(?:\d+|\d*\.\d+)$/.test(str.trim());
-}
+const isNumeric = str => /^[-+]?(?:\d+|\d*\.\d+)$/.test(str.trim());
 
-function isMathJsMethod(str) {
-    try {
-        const result = evaluate(str);
-        return typeof result === 'function';
-    } catch {
-        return false;
-    }
-}
+const isMathJsMethod = str => {
+	try {
+		return typeof evaluate(str) === 'function';
+	} catch {
+		return false;
+	}
+};
 
 /* ===========================
    Parsing de la commande
 =========================== */
 
 export async function parseInput(text) {
-    let rollExpression = "";
+    const commands = { "/r": true, "/roll": true, "/gr": true, "/gmroll": true };
+    let rollExpression = text;
     let hidden = false;
 
-    if (text.startsWith("/r") || text.startsWith("/roll")) {
-        rollExpression = text.replace("/roll", "").replace("/r", "").trim();
-    } else if (text.startsWith("/gr") || text.startsWith("/gmroll")) {
-        rollExpression = text.replace("/gmroll", "").replace("/gr", "").trim();
-        hidden = true;
-    } else {
-        rollExpression = text;
+    for (const cmd in commands) {
+        if (text.startsWith(cmd)) {
+            rollExpression = text.replace(cmd, "").trim();
+            hidden = cmd === "/gr" || cmd === "/gmroll";
+            break;
+        }
     }
 
     if (!rollExpression) return null;
 
-    let mode = "normal";
     const modeMatch = rollExpression.match(/^(max|min)\b/i);
-    if (modeMatch) {
-        mode = modeMatch[1].toLowerCase();
-        rollExpression = rollExpression.slice(modeMatch[0].length).trim();
-    }
+    const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+    if (modeMatch) rollExpression = rollExpression.slice(modeMatch[0].length).trim();
 
-    // Validation large (fonctions + .75)
     const tokens = rollExpression.match(TOKEN_REGEX);
     if (!tokens) return null;
-    const validTokenRegex =
-        /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
 
-    for (const tok of tokens) {
-        if (!validTokenRegex.test(tok)) return null;
-    }
-    // console.log(rollExpression);
+    const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+    if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
 
     return { rollExpression, hidden, mode };
 }
@@ -83,57 +72,56 @@ export async function parseInput(text) {
 
 function getTokens(text, mode) {
     const raw = text.toLowerCase().trim();
-
     const tokensRaw = raw.match(TOKEN_REGEX);
     if (!tokensRaw) {
         console.error("Impossible de tokeniser l'expression :", raw);
         return null;
     }
-    let match;
+
     let index = 0;
     let escaped = false;
     const tokens = [];
-    // console.log("raw tokens:", tokensRaw);
+
     for (const token of tokensRaw) {
-        const indexes = [index, index + token.length];
-        let newToken;
+        const [start, end] = [index, index + token.length];
+        let newToken, match;
+
         if ((match = token.match(/^(\d*)db(\d+)$/i))) {
-            newToken = new DBToken(match[1], match[2], ...indexes, mode);
+            newToken = new DBToken(match[1], match[2], start, end, mode);
         } else if ((match = token.match(/^(\d*)dF(?:udge)?$/i))) {
-            newToken = new FudgeDiceToken(match[1], ...indexes, mode);
+            newToken = new FudgeDiceToken(match[1], start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)$/i))) {
-            newToken = new DiceToken(match[1], match[2], ...indexes, mode);
+            newToken = new DiceToken(match[1], match[2], start, end, mode);
         } else if (token === "\\") {
             escaped = true;
-            index = indexes.end;
+            index = end;
             continue;
         } else if (!escaped && ["(", ")"].includes(token)) {
-            newToken = new ParenToken(token, ...indexes);
+            newToken = new ParenToken(token, start, end);
         } else if (!escaped && ["+", "-", "*", "/"].includes(token)) {
-            newToken = new OperatorToken(token, ...indexes);
+            newToken = new OperatorToken(token, start, end);
         } else if (!escaped && isNumeric(token)) {
-            newToken = new DigitToken(token, ...indexes);
+            newToken = new DigitToken(token, start, end);
         } else if (!escaped && isMathJsMethod(token)) {
-            newToken = new FunctionToken(token, ...indexes);
+            newToken = new FunctionToken(token, start, end);
         } else {
-            newToken = new TextToken(token, ...indexes);
+            newToken = new TextToken(token, start, end);
             escaped = false;
         }
+        
         tokens.push(newToken);
-        index = indexes.end;
+        index = end;
     }
-    // console.log("token objects", tokens);
+
     return tokens;
 }
 
 
 export async function rollExpression(text, mode = "normal") {
     const tokens = getTokens(text, mode);
+    if (!tokens) return null;
 
-    let displayExpr = "";
-    let calcExpr = "";
-    let expandedExpr = "";
-
+    let displayExpr = "", calcExpr = "", expandedExpr = "";
     for (const token of tokens) {
         displayExpr += ` ${token.display}`;
         calcExpr += ` ${token.value}`;
@@ -142,21 +130,19 @@ export async function rollExpression(text, mode = "normal") {
 
     let total;
     try {
-        if (calcExpr.trim() !== "") {
-            total = evaluate(calcExpr);
-            total = Number(total.toPrecision(12));
-        }
+        total = calcExpr.trim() ? Number(evaluate(calcExpr).toPrecision(12)) : 0;
     } catch (e) {
         console.error("Erreur d'évaluation mathjs :", calcExpr, e);
         return null;
     }
 
+    const hasRolls = tokens.some(t => t._rolls);
     return {
         expression: text,
         expanded: expandedExpr.trim(),
         rolls: displayExpr,
-        total: total || 0,
-        allDiceMin: tokens.some(token => token._rolls) && tokens.every(token => token.allFumble),
-        allDiceMax: tokens.some(token => token._rolls) && tokens.every(token => token.allCrit),
+        total,
+        allDiceMin: hasRolls && tokens.every(t => t.allFumble),
+        allDiceMax: hasRolls && tokens.every(t => t.allCrit),
     };
 }

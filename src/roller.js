@@ -1,191 +1,139 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { parseInput } from './dice-utils.js';
-import { rollExpression } from './dice-utils.js';
+import { parseInput, rollExpression } from './dice-utils.js';
 import { toggleDicePanel } from "./quickdice.js";
 
 const minPanelWidth = 350;
 const minPanelHeight = 200;
-
 const inputHistory = [];
 let historyIndex = -1;
-
 let isResizing = false;
 let dirActive = null;
 let startX, startY, startW, startH;
 
+const getCursorFor = dir => (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
+const escapeHTML = str => !str ? "" : str
+  .replace(/&/g, "&amp;")
+  .replace(/"/g, "&quot;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;");
+
 async function setupResizer() {
   const panel = document.querySelector('#app');
-  const dirs = ['nw', 'ne', 'sw', 'se'];
-  // console.log("Setting up resizer for dice panel...");
+  const handlers = {};
 
-  dirs.forEach(dir => {
+  for (const dir of ['nw', 'ne', 'sw', 'se']) {
     const h = document.createElement('div');
     h.classList.add('resize-handle', dir);
     panel.appendChild(h);
-    // console.log(`Resize handle added for direction: ${dir}`, h);
+
+    handlers[dir] = {
+      onPointerMove: async e => {
+        if (!isResizing || dirActive !== dir) return;
+        e.preventDefault();
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        await OBR.action.setWidth(Math.max(minPanelWidth, startW + (dir.includes('e') ? dx : -dx)));
+        await OBR.action.setHeight(Math.max(minPanelHeight, startH + (dir.includes('s') ? dy : -dy)));
+      },
+      onPointerUp: e => {
+        if (!isResizing || dirActive !== dir) return;
+        e.preventDefault();
+        isResizing = false;
+        dirActive = null;
+        document.body.style.cursor = '';
+        h.releasePointerCapture(e.pointerId);
+        h.removeEventListener('pointermove', handlers[dir].onPointerMove);
+        h.removeEventListener('pointerup', handlers[dir].onPointerUp);
+      }
+    };
 
     h.addEventListener('pointerdown', async e => {
-      // console.log(`Resizing started in direction: ${dir}`);
       e.preventDefault();
       e.stopPropagation();
       isResizing = true;
       dirActive = dir;
-      startX = e.clientX;
-      startY = e.clientY;
-      startW = await OBR.action.getWidth();
-      startH = await OBR.action.getHeight();
+      [startX, startY] = [e.clientX, e.clientY];
+      [startW, startH] = [await OBR.action.getWidth(), await OBR.action.getHeight()];
       document.body.style.cursor = getCursorFor(dir);
       h.setPointerCapture(e.pointerId);
-      h.addEventListener('pointermove', onPointerMove, { passive: false });
-      h.addEventListener('pointerup', onPointerUp, { passive: false });
+      h.addEventListener('pointermove', handlers[dir].onPointerMove, { passive: false });
+      h.addEventListener('pointerup', handlers[dir].onPointerUp, { passive: false });
     }, { passive: false });
-
-    const onPointerMove = async e => {
-      if (!isResizing || dirActive !== dir) return;
-      e.preventDefault();
-      const dx = e.clientX - startX;
-      const dy = e.clientY - startY;
-      let newW = startW + (dir.includes('e') ? dx : -dx);
-      let newH = startH + (dir.includes('s') ? dy : -dy);
-      newW = Math.max(minPanelWidth, newW);
-      newH = Math.max(minPanelHeight, newH);
-      await OBR.action.setWidth(newW);
-      await OBR.action.setHeight(newH);
-    };
-
-    const onPointerUp = e => {
-      if (!isResizing || dirActive !== dir) return;
-      e.preventDefault();
-      isResizing = false;
-      dirActive = null;
-      document.body.style.cursor = '';
-      h.releasePointerCapture(e.pointerId);
-      h.removeEventListener('pointermove', onPointerMove);
-      h.removeEventListener('pointerup', onPointerUp);
-    };
-  });
+  }
 }
 
-function getCursorFor(dir) {
-  return (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
-}
-
-// SETUP
 export function setupDiceRoller(playerName) {
-
-  document.getElementById('toggleDicePanel').addEventListener('click', () => {
-    toggleDicePanel();
-  });
-
-  setupResizer();
-
   console.log(`JustDices: Setting up dice roller for player: ${playerName}`);
-  // console.log("Connection ID:", OBR.player.id);
+  setupResizer();
+  document.getElementById('toggleDicePanel').addEventListener('click', () => toggleDicePanel());
 
-  // Setup Submit event
-  document.getElementById("hiddenRollButton").addEventListener("click", async () => {
-    const value = document.getElementById("inputField").value;
-    const command = value.trim().startsWith("/gr") ? value : "/gr " + value;
-    await submitInput(command);
-  });
+  const triggerInputError = msg => {
+    const inputField = document.getElementById("inputField");
+    if (!inputField) return;
+    OBR.notification.show(msg, "ERROR");
+    inputField.classList.add("input-error-text", "input-error-outline");
+    setTimeout(() => inputField.classList.remove("input-error-text", "input-error-outline"), 1000);
+  };
 
-  document.getElementById("rollButton").addEventListener("click", async () => {
-    const value = document.getElementById("inputField").value;
-    const command = value.trim().startsWith("/r") ? value : "/r " + value;
-    await submitInput(command);
-  });
+  const handleRoll = async (isHidden = false) => {
+    const value = document.getElementById("inputField").value.trim();
+    const prefix = isHidden ? "/gr " : "/r ";
+    const command = value.startsWith(isHidden ? "/gr" : "/r") ? value : prefix + value;
+    await submitInput(command, triggerInputError);
+  };
+
+  document.getElementById("hiddenRollButton").addEventListener("click", () => handleRoll(true));
+  document.getElementById("rollButton").addEventListener("click", () => handleRoll());
 
   document.getElementById("input").addEventListener("submit", async (event) => {
-    event.preventDefault(); // Prevent form from refreshing the page
-    const value = document.getElementById("inputField").value;
-    let command = value.trim();
-    if (!command.startsWith("/gr") && !command.startsWith("/r")) {
-      command = "/r " + command;
-    }
-    await submitInput(command);
+    event.preventDefault();
+    const value = document.getElementById("inputField").value.trim();
+    const command = value.startsWith("/gr") || value.startsWith("/r") ? value : "/r " + value;
+    await submitInput(command, triggerInputError);
     document.getElementById("inputField").value = "";
   });
 
   document.getElementById("inputField").addEventListener("keydown", (e) => {
+    const input = document.getElementById("inputField");
     if (e.key === "ArrowUp") {
       e.preventDefault();
       if (inputHistory.length === 0) return;
-      if (historyIndex < 0) historyIndex = inputHistory.length - 1;
-      else if (historyIndex > 0) historyIndex--;
-      inputField.value = inputHistory[historyIndex];
-    }
-    else if (e.key === "ArrowDown") {
+      historyIndex = historyIndex < 0 ? inputHistory.length - 1 : Math.max(0, historyIndex - 1);
+      input.value = inputHistory[historyIndex];
+    } else if (e.key === "ArrowDown") {
       e.preventDefault();
       if (inputHistory.length === 0) return;
-      if (historyIndex < inputHistory.length - 1) {
-        historyIndex++;
-        inputField.value = inputHistory[historyIndex];
-      } else {
-        historyIndex = -1;
-        inputField.value = "";
-      }
+      if (historyIndex < inputHistory.length - 1) input.value = inputHistory[++historyIndex];
+      else { historyIndex = -1; input.value = ""; }
     }
   });
 
   OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
-    // console.log(event);
-    const currentPlayer = await OBR.player.id;
-    const isGM = await OBR.player.getRole() === "GM";
-
-    // console.log("Current Player ID:", currentPlayer);
-    // console.log("Sender ID:", event.data.senderId);
-
-    let show = true;
-    if (event.data.text.hidden) {
-      // console.log("Jet caché reçu, vérification des permissions...");
-      if (event.data.sender.id !== currentPlayer && !isGM) {
-        // console.log("Jet caché non affiché (pas le lanceur ni GM).");
-        show = false;
-      }
+    const [currentPlayer, isGM] = [await OBR.player.id, await OBR.player.getRole() === "GM"];
+    if (!event.data.text.hidden || event.data.sender.id === currentPlayer || isGM) {
+      addLogEntry(event.data);
     }
-
-    if (show) addLogEntry(event.data);
   });
 }
 
-// INPUT WORKFLOW
-export async function submitInput(text) {
-  // Utilitaire : affiche une erreur et déclenche l'animation d'erreur
-  function triggerInputError(message) {
-    const inputField = document.getElementById("inputField");
-    if (!inputField) return;
+export async function submitInput(text, triggerInputError = null) {
+  const errorHandler = triggerInputError || (msg => OBR.notification.show(msg, "ERROR"));
 
-    OBR.notification.show(message, "ERROR");
-
-    inputField.classList.add("input-error-text", "input-error-outline");
-
-    setTimeout(() => {
-      inputField.classList.remove("input-error-text", "input-error-outline");
-    }, 1000);
-  }
-
-  // 1. Parse l’input pour extraire l’expression
   const parsedInput = await parseInput(text);
   if (!parsedInput) {
     console.error("Failed to parse input.");
-    triggerInputError("Invalid or empty dice command.");
+    errorHandler("Invalid or empty dice command.");
     return;
   }
 
-  // 2. Lance les dés
   const rollResult = await rollExpression(parsedInput.rollExpression, parsedInput.mode);
   if (!rollResult) {
     console.error("rollExpression returned null.");
-    triggerInputError("Dice roll failed (syntax error?).");
+    errorHandler("Dice roll failed (syntax error?).");
     return;
   }
 
-
-  // 3. Construit l'objet de résultat
   const resultStr = {
-    // Expression étendue (db4 → 1d8+6)
     expressionExpanded: rollResult.expanded,
-    // Dans 'rolls', on met le détail formaté
     rolls: rollResult.rolls,
     total: rollResult.total,
     hidden: parsedInput.hidden,
@@ -196,69 +144,45 @@ export async function submitInput(text) {
 
   if (text.trim()) {
     inputHistory.push(text.trim());
-    if (inputHistory.length > 50) inputHistory.shift(); // Limiter à 50
+    if (inputHistory.length > 50) inputHistory.shift();
   }
-  historyIndex = -1; // Reset navigation après un envoi
+  historyIndex = -1;
 
-  // 4. Envoie au log (et au GM si hidden)
-  await broadcastLogEntry(
-    await OBR.player.getName(),
-    resultStr
-  );
+  await broadcastLogEntry(await OBR.player.getName(), resultStr);
 }
 
-function escapeHTML(str) {
-  if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/"/g, "&quot;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-
-
-// LOGGING
 async function addLogEntry(eventData) {
   const logCards = document.getElementById("logCards");
   const newEntry = document.createElement("div");
+  const { text, sender } = eventData;
 
-  let criticalClass = "";
-  if (eventData.text.allDiceMax) criticalClass = " critical-flex";
-  if (eventData.text.allDiceMin) criticalClass = " critical-failure";
-
+  const criticalClass = text.allDiceMax ? " critical-flex" : text.allDiceMin ? " critical-failure" : "";
   newEntry.className = "card log-entry-animate" + criticalClass;
 
-  if (eventData.text.hidden) {
+  if (text.hidden) {
     newEntry.classList.add("hidden-roll");
-    newEntry.style.borderColor = eventData.sender.color + "80";
+    newEntry.style.borderColor = sender.color + "80";
   } else {
     newEntry.classList.add("public-roll");
-    newEntry.style.borderColor = eventData.sender.color;
+    newEntry.style.borderColor = sender.color;
   }
 
-  const originalCommand = eventData.text.original || eventData.text.expression;
+  const originalCommand = text.original || text.expression;
+  const lockIcon = text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : '';
 
   newEntry.innerHTML = `
     <div class="log-entry">
       <div class="log-text">
-        <span class="log user">
-          ${eventData.text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : ''}
-          ${eventData.sender.name}:
-        </span>
+        <span class="log user">${lockIcon}${sender.name}:</span>
         <span class="log-expression">
           ${originalCommand}
-          <span class="roll-tooltip" title="${escapeHTML(eventData.text.expressionExpanded || originalCommand)}">🔍</span>
+          <span class="roll-tooltip" title="${escapeHTML(text.expressionExpanded || originalCommand)}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
-          <span class="rolls-content">${eventData.text.rolls}</span>
-        </span>
-
-
- = 
-        <span class="log total">${eventData.text.total}</span>
+          <span class="rolls-content">${text.rolls}</span>
+        </span> = <span class="log total">${text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${eventData.text.original}" title="Reroll">
+      <button class="reroll-button" data-command="${text.original}" title="Reroll">
         <span class="dice-icon">🎲</span>
       </button>
     </div>
@@ -270,9 +194,7 @@ async function addLogEntry(eventData) {
   const contentSpan = resultSpan.querySelector(".rolls-content");
 
   requestAnimationFrame(() => {
-    const isOverflowing = contentSpan.scrollHeight > contentSpan.clientHeight + 2;
-
-    if (isOverflowing) {
+    if (contentSpan.scrollHeight > contentSpan.clientHeight + 2) {
       const btn = document.createElement("button");
       btn.className = "expand-rolls";
       btn.textContent = "▼";
@@ -284,29 +206,18 @@ async function addLogEntry(eventData) {
     }
   });
 
-
-  const rerollBtn = newEntry.querySelector(".reroll-button");
-  if (rerollBtn) {
-    rerollBtn.addEventListener("click", async (e) => {
-      const command = e.currentTarget.getAttribute("data-command");
-      if (command) {
-        await submitInput(command);
-      }
-    });
-  }
+  newEntry.querySelector(".reroll-button").addEventListener("click", async e => {
+    const command = e.currentTarget.getAttribute("data-command");
+    if (command) await submitInput(command);
+  });
 }
 
 async function broadcastLogEntry(user, text) {
-  let sender;
-  (async () => {
-    sender = {
-      id: await OBR.player.getId(),
-      name: await OBR.player.getName(),
-      color: await OBR.player.getColor(),
-      role: await OBR.player.getRole(),
-    };
-
-    OBR.broadcast.sendMessage("justdices.dice-roll", { sender: sender, user: user, text: text }, { destination: 'ALL' });
-  })();
-
+  const sender = {
+    id: await OBR.player.getId(),
+    name: await OBR.player.getName(),
+    color: await OBR.player.getColor(),
+    role: await OBR.player.getRole(),
+  };
+  OBR.broadcast.sendMessage("justdices.dice-roll", { sender, user, text }, { destination: 'ALL' });
 }
