@@ -77,7 +77,7 @@ export function setupDiceRoller(playerName) {
   const handleRoll = async (isHidden = false) => {
     const value = document.getElementById("inputField").value.trim();
     const prefix = isHidden ? "/gr " : "/r ";
-    const command = value.startsWith(isHidden ? "/gr" : "/r") ? value : prefix + value;
+    const command = value.startsWith("/") ? value : prefix + value;
     await submitInput(command, triggerInputError);
   };
 
@@ -87,7 +87,7 @@ export function setupDiceRoller(playerName) {
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault();
     const value = document.getElementById("inputField").value.trim();
-    const command = value.startsWith("/gr") || value.startsWith("/r") ? value : "/r " + value;
+    const command = value.startsWith("/") ? value : "/r " + value;
     await submitInput(command, triggerInputError);
     document.getElementById("inputField").value = "";
   });
@@ -109,7 +109,9 @@ export function setupDiceRoller(playerName) {
 
   OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
     const [currentPlayer, isGM] = [await OBR.player.id, await OBR.player.getRole() === "GM"];
-    if (!event.data.text.hidden || event.data.sender.id === currentPlayer || isGM) {
+    // Always show "say" messages, respect hidden flag for rolls
+    const isHidden = event.data.text.hidden;
+    if (!isHidden || event.data.sender.id === currentPlayer || isGM) {
       addLogEntry(event.data);
     }
   });
@@ -121,10 +123,29 @@ export async function submitInput(text, triggerInputError = null) {
   const parsedInput = await parseInput(text);
   if (!parsedInput) {
     console.error("Failed to parse input.");
-    errorHandler("Invalid or empty dice command.");
+    errorHandler("Invalid command.");
     return;
   }
 
+  // Add to history
+  if (text.trim()) {
+    inputHistory.push(text.trim());
+    if (inputHistory.length > 50) inputHistory.shift();
+  }
+  historyIndex = -1;
+
+  // Handle "say" command
+  if (parsedInput.type === "say") {
+    const resultStr = {
+      isSay: true,
+      message: parsedInput.message,
+      original: text,
+    };
+    await broadcastLogEntry(await OBR.player.getName(), resultStr);
+    return;
+  }
+
+  // Handle roll command
   const rollResult = await rollExpression(parsedInput.rollExpression, parsedInput.mode);
   if (!rollResult) {
     console.error("rollExpression returned null.");
@@ -142,12 +163,6 @@ export async function submitInput(text, triggerInputError = null) {
     allDiceMin: rollResult.allDiceMin
   };
 
-  if (text.trim()) {
-    inputHistory.push(text.trim());
-    if (inputHistory.length > 50) inputHistory.shift();
-  }
-  historyIndex = -1;
-
   await broadcastLogEntry(await OBR.player.getName(), resultStr);
 }
 
@@ -156,7 +171,25 @@ async function addLogEntry(eventData) {
   const newEntry = document.createElement("div");
   const { text, sender } = eventData;
 
-  const criticalClass = text.allDiceMax ? " critical-flex" : text.allDiceMin ? " critical-failure" : "";
+  // Handle "say" message
+  if (text.isSay) {
+    newEntry.className = "card log-entry-animate say-message";
+    newEntry.style.borderColor = sender.color;
+
+    newEntry.innerHTML = `
+      <div class="log-entry">
+        <div class="log-text">
+          <span class="log user">${sender.name}:</span>
+          <span class="log-message">${escapeHTML(text.message)}</span>
+        </div>
+      </div>
+    `;
+
+    logCards.insertBefore(newEntry, logCards.firstChild);
+    return;
+  }
+
+  const criticalClass = (text.allDiceMax ? " critical-flex" : "") + (text.allDiceMin ? " critical-failure" : "");
   newEntry.className = "card log-entry-animate" + criticalClass;
 
   if (text.hidden) {
@@ -194,7 +227,7 @@ async function addLogEntry(eventData) {
   const contentSpan = resultSpan.querySelector(".rolls-content");
 
   requestAnimationFrame(() => {
-    if (contentSpan.scrollHeight > contentSpan.clientHeight + 2) {
+    if (contentSpan && contentSpan.scrollHeight > contentSpan.clientHeight + 2) {
       const btn = document.createElement("button");
       btn.className = "expand-rolls";
       btn.textContent = "▼";

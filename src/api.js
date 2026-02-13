@@ -30,30 +30,46 @@ export function setupJustDicesApi() {
     const base = { callId: req.callId, requesterId: req.requesterId, expressionIn: req.expression };
 
     try {
-      const parsed = await parseInput(req.expression);
+      // Check if expression already has a command prefix
+      const hasCommand = /^\/(r|roll|gr|gmroll|say)\b/i.test(req.expression);
+      const command = hasCommand ? req.expression : "/r " + req.expression;
+      
+      const parsed = await parseInput(command);
       if (!parsed) {
         console.error("[API] Parse failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "PARSE_ERROR", destination: "LOCAL" });
+        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "PARSE_ERROR" }, { destination: "LOCAL" });
         return;
       }
 
-      const roll = await rollExpression(parsed.rollExpression, parsed.mode || "normal");
+      // Handle "say" command
+      if (parsed.type === "say") {
+        if (req.showInLogs) {
+          const sender = await getSender();
+          await sendToLog(sender, { isSay: true, message: parsed.message, original: req.expression });
+        }
+        const response = { ...base, ok: true, data: { isSay: true, message: parsed.message } };
+        await OBR.broadcast.sendMessage("justdices.api.response", response, { destination: "LOCAL" });
+        return;
+      }
+
+      // Handle roll command
+      const roll = await rollExpression(parsed.rollExpression, parsed.mode);
       if (!roll) {
         console.error("[API] Roll failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "ROLL_ERROR", destination: "LOCAL" });
+        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "ROLL_ERROR" }, { destination: "LOCAL" });
         return;
       }
 
       if (req.showInLogs) {
         const sender = await getSender();
-        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: !!parsed.hidden, original: req.expression, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
+        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: req.expression, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };
       await OBR.broadcast.sendMessage("justdices.api.response", response, { destination: "LOCAL" });
     } catch (e) {
       console.error("[API] Exception during roll", e);
-      await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: String(e), destination: "LOCAL" });
+      await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: String(e) }, { destination: "LOCAL" });
     }
   });
 }

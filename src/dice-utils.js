@@ -39,31 +39,45 @@ const isMathJsMethod = str => {
 =========================== */
 
 export async function parseInput(text) {
-    const commands = { "/r": true, "/roll": true, "/gr": true, "/gmroll": true };
-    let rollExpression = text;
-    let hidden = false;
-
-    for (const cmd in commands) {
-        if (text.startsWith(cmd)) {
-            rollExpression = text.replace(cmd, "").trim();
-            hidden = cmd === "/gr" || cmd === "/gmroll";
-            break;
-        }
+    // Extract command and content
+    const sayMatch = text.match(/^\/say\s+(.+)$/i);
+    if (sayMatch) {
+        return { type: "say", message: sayMatch[1] };
     }
 
-    if (!rollExpression) return null;
+    const rollMatch = text.match(/^\/(r|roll)\s+(.+)$/i);
+    if (rollMatch) {
+        const rollExpression = rollMatch[2].trim();
+        const modeMatch = rollExpression.match(/^(max|min)\b/i);
+        const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+        const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
+        
+        const tokens = expr.match(TOKEN_REGEX);
+        if (!tokens) return null;
+        
+        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+        if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
+        
+        return { type: "roll", rollExpression: expr, mode, hidden: false };
+    }
 
-    const modeMatch = rollExpression.match(/^(max|min)\b/i);
-    const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
-    if (modeMatch) rollExpression = rollExpression.slice(modeMatch[0].length).trim();
+    const grMatch = text.match(/^\/(gr|gmroll)\s+(.+)$/i);
+    if (grMatch) {
+        const rollExpression = grMatch[2].trim();
+        const modeMatch = rollExpression.match(/^(max|min)\b/i);
+        const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+        const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
+        
+        const tokens = expr.match(TOKEN_REGEX);
+        if (!tokens) return null;
+        
+        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+        if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
+        
+        return { type: "roll", rollExpression: expr, mode, hidden: true };
+    }
 
-    const tokens = rollExpression.match(TOKEN_REGEX);
-    if (!tokens) return null;
-
-    const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
-    if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
-
-    return { rollExpression, hidden, mode };
+    return null;
 }
 
 /* ===========================
