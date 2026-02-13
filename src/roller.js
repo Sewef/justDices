@@ -1,6 +1,15 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { parseInput, rollExpression } from './dice-utils.js';
 import { toggleDicePanel } from "./quickdice.js";
+import { broadcastLogEntry, registerDiceRollListener, getCurrentSender } from "./broadcastManager.js";
+import { 
+  addLogEntry, 
+  showInputError, 
+  getInputValue, 
+  clearInput, 
+  setInputValue,
+  cleanupListeners 
+} from "./uiManager.js";
 
 const minPanelWidth = 350;
 const minPanelHeight = 200;
@@ -11,11 +20,6 @@ let dirActive = null;
 let startX, startY, startW, startH;
 
 const getCursorFor = dir => (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
-const escapeHTML = str => !str ? "" : str
-  .replace(/&/g, "&amp;")
-  .replace(/"/g, "&quot;")
-  .replace(/</g, "&lt;")
-  .replace(/>/g, "&gt;");
 
 async function setupResizer() {
   const panel = document.querySelector('#app');
@@ -66,19 +70,11 @@ export function setupDiceRoller(playerName) {
   setupResizer();
   document.getElementById('toggleDicePanel').addEventListener('click', () => toggleDicePanel());
 
-  const triggerInputError = msg => {
-    const inputField = document.getElementById("inputField");
-    if (!inputField) return;
-    OBR.notification.show(msg, "ERROR");
-    inputField.classList.add("input-error-text", "input-error-outline");
-    setTimeout(() => inputField.classList.remove("input-error-text", "input-error-outline"), 1000);
-  };
-
   const handleRoll = async (isHidden = false) => {
-    const value = document.getElementById("inputField").value.trim();
+    const value = getInputValue();
     const prefix = isHidden ? "/gr " : "/r ";
     const command = value.startsWith("/") ? value : prefix + value;
-    await submitInput(command, triggerInputError);
+    await submitInput(command);
   };
 
   document.getElementById("hiddenRollButton").addEventListener("click", () => handleRoll(true));
@@ -86,10 +82,10 @@ export function setupDiceRoller(playerName) {
 
   document.getElementById("input").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const value = document.getElementById("inputField").value.trim();
+    const value = getInputValue();
     const command = value.startsWith("/") ? value : "/r " + value;
-    await submitInput(command, triggerInputError);
-    document.getElementById("inputField").value = "";
+    await submitInput(command);
+    clearInput();
   });
 
   document.getElementById("inputField").addEventListener("keydown", (e) => {
@@ -98,27 +94,30 @@ export function setupDiceRoller(playerName) {
       e.preventDefault();
       if (inputHistory.length === 0) return;
       historyIndex = historyIndex < 0 ? inputHistory.length - 1 : Math.max(0, historyIndex - 1);
-      input.value = inputHistory[historyIndex];
+      setInputValue(inputHistory[historyIndex]);
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       if (inputHistory.length === 0) return;
-      if (historyIndex < inputHistory.length - 1) input.value = inputHistory[++historyIndex];
-      else { historyIndex = -1; input.value = ""; }
+      if (historyIndex < inputHistory.length - 1) setInputValue(inputHistory[++historyIndex]);
+      else { historyIndex = -1; setInputValue(""); }
     }
   });
 
-  OBR.broadcast.onMessage("justdices.dice-roll", async (event) => {
+  // Register broadcast listener for incoming rolls
+  registerDiceRollListener(async (event) => {
     const [currentPlayer, isGM] = [await OBR.player.id, await OBR.player.getRole() === "GM"];
-    // Always show "say" messages, respect hidden flag for rolls
     const isHidden = event.data.text.hidden;
     if (!isHidden || event.data.sender.id === currentPlayer || isGM) {
-      addLogEntry(event.data);
+      addLogEntry(event.data, submitInput);
     }
   });
 }
 
 export async function submitInput(text, triggerInputError = null) {
-  const errorHandler = triggerInputError || (msg => OBR.notification.show(msg, "ERROR"));
+  const errorHandler = triggerInputError || ((msg) => {
+    showInputError(msg);
+    OBR.notification.show(msg, "ERROR");
+  });
 
   const parsedInput = await parseInput(text);
   if (!parsedInput) {
@@ -136,12 +135,13 @@ export async function submitInput(text, triggerInputError = null) {
 
   // Handle "say" command
   if (parsedInput.type === "say") {
+    const sender = await getCurrentSender();
     const resultStr = {
       isSay: true,
       message: parsedInput.message,
       original: text,
     };
-    await broadcastLogEntry(await OBR.player.getName(), resultStr);
+    await broadcastLogEntry(sender, resultStr);
     return;
   }
 
@@ -153,6 +153,7 @@ export async function submitInput(text, triggerInputError = null) {
     return;
   }
 
+  const sender = await getCurrentSender();
   const resultStr = {
     expressionExpanded: rollResult.expanded,
     rolls: rollResult.rolls,
@@ -163,94 +164,18 @@ export async function submitInput(text, triggerInputError = null) {
     allDiceMin: rollResult.allDiceMin
   };
 
-  await broadcastLogEntry(await OBR.player.getName(), resultStr);
+  await broadcastLogEntry(sender, resultStr);
 }
 
-async function addLogEntry(eventData) {
-  const logCards = document.getElementById("logCards");
-  const newEntry = document.createElement("div");
-  const { text, sender } = eventData;
 
-  // Handle "say" message
-  if (text.isSay) {
-    newEntry.className = "card log-entry-animate say-message";
-    newEntry.style.borderColor = sender.color;
-
-    newEntry.innerHTML = `
-      <div class="log-entry">
-        <div class="log-text">
-          <span class="log user">${sender.name}:</span>
-          <span class="log-message">${escapeHTML(text.message)}</span>
-        </div>
-      </div>
-    `;
-
-    logCards.insertBefore(newEntry, logCards.firstChild);
-    return;
-  }
-
-  const criticalClass = (text.allDiceMax ? " critical-flex" : "") + (text.allDiceMin ? " critical-failure" : "");
-  newEntry.className = "card log-entry-animate" + criticalClass;
-
-  if (text.hidden) {
-    newEntry.classList.add("hidden-roll");
-    newEntry.style.borderColor = sender.color + "80";
-  } else {
-    newEntry.classList.add("public-roll");
-    newEntry.style.borderColor = sender.color;
-  }
-
-  const originalCommand = text.original || text.expression;
-  const lockIcon = text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : '';
-
-  newEntry.innerHTML = `
-    <div class="log-entry">
-      <div class="log-text">
-        <span class="log user">${lockIcon}${sender.name}:</span>
-        <span class="log-expression">
-          ${originalCommand}
-          <span class="roll-tooltip" title="${escapeHTML(text.expressionExpanded || originalCommand)}">🔍</span>
-        </span>
-        <span class="log result truncated hidden-rolls">
-          <span class="rolls-content">${text.rolls}</span>
-        </span> = <span class="log total">${text.total}</span>
-      </div>
-      <button class="reroll-button" data-command="${text.original}" title="Reroll">
-        <span class="dice-icon">🎲</span>
-      </button>
-    </div>
-  `;
-
-  logCards.insertBefore(newEntry, logCards.firstChild);
-
-  const resultSpan = newEntry.querySelector(".log.result");
-  const contentSpan = resultSpan.querySelector(".rolls-content");
-
-  requestAnimationFrame(() => {
-    if (contentSpan && contentSpan.scrollHeight > contentSpan.clientHeight + 2) {
-      const btn = document.createElement("button");
-      btn.className = "expand-rolls";
-      btn.textContent = "▼";
-      btn.addEventListener("click", () => {
-        resultSpan.classList.toggle("expanded");
-        btn.textContent = resultSpan.classList.contains("expanded") ? "▲" : "▼";
-      });
-      resultSpan.appendChild(btn);
-    }
-  });
-
-  newEntry.querySelector(".reroll-button").addEventListener("click", async e => {
-    const command = e.currentTarget.getAttribute("data-command");
-    if (command) await submitInput(command);
-  });
+/**
+ * Cleanup resources when page unloads
+ */
+export function cleanup() {
+  cleanupListeners();
+  inputHistory.length = 0;
+  historyIndex = -1;
 }
 
-async function broadcastLogEntry(user, text) {
-  const sender = {
-    id: await OBR.player.getId(),
-    name: await OBR.player.getName(),
-    color: await OBR.player.getColor(),
-    role: await OBR.player.getRole(),
-  };
-  OBR.broadcast.sendMessage("justdices.dice-roll", { sender, user, text }, { destination: 'ALL' });
-}
+// Register cleanup on page unload
+window.addEventListener('beforeunload', cleanup);

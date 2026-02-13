@@ -1,5 +1,4 @@
 // dice-utils.js
-import { evaluate } from "mathjs";
 import {
     DBToken,
     DiceToken,
@@ -12,15 +11,13 @@ import {
     DigitToken,
     TextToken,
 } from "./tokens.js";
+import { cachedEvaluate } from "./cacheManager.js";
+import { parseAndValidateExpression, TOKEN_REGEX } from "./validationUtils.js";
 
 
 /* ===========================
    Tables & Constants
 =========================== */
-
-// Common tokenizer: functions, dice, bare decimals, operators, parentheses
-const TOKEN_REGEX =
-    /([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
 
 /* ===========================
    Utilities
@@ -28,12 +25,35 @@ const TOKEN_REGEX =
 
 const isNumeric = str => /^[-+]?(?:\d+|\d*\.\d+)$/.test(str.trim());
 
-const isMathJsMethod = str => {
-	try {
-		return typeof evaluate(str) === 'function';
-	} catch {
-		return false;
-	}
+let mathFunctions = null;
+
+/**
+ * Lazy load mathjs function names
+ */
+async function loadMathFunctionNames() {
+  if (mathFunctions) return mathFunctions;
+  
+  try {
+    const math = await import('mathjs');
+    const instance = math.default || math;
+    // Get all built-in functions from mathjs
+    mathFunctions = new Set(Object.keys(instance).filter(key => {
+      try {
+        return typeof instance[key] === 'function';
+      } catch {
+        return false;
+      }
+    }));
+    return mathFunctions;
+  } catch (e) {
+    console.error("Failed to load mathjs functions:", e);
+    return new Set();
+  }
+}
+
+const isMathJsMethod = async str => {
+  const functions = await loadMathFunctionNames();
+  return functions.has(str);
 };
 
 /* ===========================
@@ -54,11 +74,7 @@ export async function parseInput(text) {
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
         
-        const tokens = expr.match(TOKEN_REGEX);
-        if (!tokens) return null;
-        
-        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
-        if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
+        if (!parseAndValidateExpression(expr)) return null;
         
         return { type: "roll", rollExpression: expr, mode, hidden: false };
     }
@@ -70,11 +86,7 @@ export async function parseInput(text) {
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
         
-        const tokens = expr.match(TOKEN_REGEX);
-        if (!tokens) return null;
-        
-        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
-        if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
+        if (!parseAndValidateExpression(expr)) return null;
         
         return { type: "roll", rollExpression: expr, mode, hidden: true };
     }
@@ -127,11 +139,10 @@ function getTokens(text, mode) {
             newToken = new OperatorToken(token, start, end);
         } else if (!escaped && isNumeric(token)) {
             newToken = new DigitToken(token, start, end);
-        } else if (!escaped && isMathJsMethod(token)) {
-            newToken = new FunctionToken(token, start, end);
         } else {
-            newToken = new TextToken(token, start, end);
-            escaped = false;
+            // Could be a function or a text token - treat as text for now
+            // Functions are validated during evaluation, not tokenization
+            newToken = new FunctionToken(token, start, end);
         }
         
         tokens.push(newToken);
@@ -155,7 +166,7 @@ export async function rollExpression(text, mode = "normal") {
 
     let total;
     try {
-        total = calcExpr.trim() ? Number(evaluate(calcExpr).toPrecision(12)) : 0;
+        total = calcExpr.trim() ? await cachedEvaluate(calcExpr) : 0;
     } catch (e) {
         console.error("mathjs evaluation error:", calcExpr, e);
         return null;
