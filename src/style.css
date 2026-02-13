@@ -203,6 +203,11 @@ button:hover {
     font-weight: bold;
 }
 
+#logCards .card .log.result .dropped {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
 .log-entry {
     position: relative;
     overflow: visible;

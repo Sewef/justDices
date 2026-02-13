@@ -170,6 +170,95 @@ export class ExplodeDiceToken extends Token {
 	}
 }
 
+/** Dés conservés/supprimés : 4d6k3 ou 4d6d1 */
+export class KeepDropDiceToken extends Token {
+	constructor(n, faces, keepCount, dropCount, start, end, mode = "normal") {
+		super(start, end);
+		this.n = parseInt(n, 10) || 1;
+		this.faces = parseInt(faces, 10);
+		this.keepCount = keepCount !== null ? keepCount : this.n;
+		this.dropCount = dropCount !== null ? dropCount : 0;
+		this.mode = mode;
+		this.min = 1;
+		this.max = this.faces;
+		this._rolls = null;
+		this._droppedIndices = null;
+		this._value = 0;
+	}
+
+	_rollDice() {
+		return Array.from({ length: this.n }, () => this.diceRoll(this.faces));
+	}
+
+	_computeDroppedIndices(rolls) {
+		// Créer un array avec indices: [{value: 3, index: 0}, ...]
+		const indexed = rolls.map((value, index) => ({ value, index }));
+		
+		// Trier par valeur
+		const sorted = [...indexed].sort((a, b) => a.value - b.value);
+		
+		// Déterminer combien à drop/keep
+		const dropCount = this.dropCount > 0 ? this.dropCount : Math.max(0, rolls.length - this.keepCount);
+		
+		// Les indices à drop sont les 'dropCount' premiers du tri
+		const droppedIndices = new Set(sorted.slice(0, dropCount).map(item => item.index));
+		
+		return droppedIndices;
+	}
+
+	_ensureRolled() {
+		if (this._rolls && this._droppedIndices) return;
+		
+		if (this.mode === "min") {
+			this._rolls = Array(this.n).fill(this.min);
+		} else if (this.mode === "max") {
+			this._rolls = Array(this.n).fill(this.max);
+		} else {
+			this._rolls = this._rollDice();
+		}
+		
+		// Calculer les indices supprimés
+		this._droppedIndices = this._computeDroppedIndices(this._rolls);
+		
+		// Calculer la somme des dés non supprimés
+		this._value = this._rolls.reduce((sum, val, idx) => {
+			return this._droppedIndices.has(idx) ? sum : sum + val;
+		}, 0);
+	}
+
+	get display() {
+		this._ensureRolled();
+		const decorated = this._rolls.map((r, idx) => {
+			if (this._droppedIndices.has(idx)) {
+				return `<span class="dropped">${r}</span>`;
+			} else {
+				return decorateRoll(r, this.min, this.max);
+			}
+		});
+		return `[ ${decorated.join(", ")} ]`;
+	}
+
+	get value() {
+		this._ensureRolled();
+		return String(this._value);
+	}
+
+	get allFumble() { 
+		this._ensureRolled();
+		return this._rolls.every((r, idx) => this._droppedIndices.has(idx) || r === this.min); 
+	}
+	
+	get allCrit() { 
+		this._ensureRolled();
+		return this._rolls.every((r, idx) => this._droppedIndices.has(idx) || r === this.max); 
+	}
+	
+	get expanded() { 
+		const modifier = this.keepCount < this.n ? `k${this.keepCount}` : this.dropCount > 0 ? `d${this.dropCount}` : "";
+		return `${this.n}d${this.faces}${modifier}`; 
+	}
+}
+
 /** Fudge Dice : NdF */
 export class FudgeDiceToken extends DiceToken {
 	constructor(n, start, end, mode) { 

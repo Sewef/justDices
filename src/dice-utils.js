@@ -5,6 +5,7 @@ import {
     DiceToken,
     ExplodeDiceToken,
     FudgeDiceToken,
+    KeepDropDiceToken,
     OperatorToken,
     ParenToken,
     FunctionToken,
@@ -19,7 +20,7 @@ import {
 
 // Tokenizer commun : fonctions, dés, décimaux nus, opérateurs, parenthèses
 const TOKEN_REGEX =
-    /([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
+    /([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])/giu;
 
 /* ===========================
    Utilitaires
@@ -56,7 +57,7 @@ export async function parseInput(text) {
         const tokens = expr.match(TOKEN_REGEX);
         if (!tokens) return null;
         
-        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
         if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
         
         return { type: "roll", rollExpression: expr, mode, hidden: false };
@@ -72,7 +73,7 @@ export async function parseInput(text) {
         const tokens = expr.match(TOKEN_REGEX);
         if (!tokens) return null;
         
-        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
+        const validTokenRegex = /^([\p{L}_][\p{L}0-9_]*|\d*d\d+!(?:>=\d+)?|\d*d\d+[kd]\d+|\d*d\d+|\d*db\d+|\d*dF(?:udge)?|\d+(?:\.\d+)?|\.\d+|[\+\-\*\/\(\)\\])$/iu;
         if (!tokens.every(tok => validTokenRegex.test(tok))) return null;
         
         return { type: "roll", rollExpression: expr, mode, hidden: true };
@@ -109,6 +110,12 @@ function getTokens(text, mode) {
             // Dés explosifs : 4d6! ou 4d6!>=5
             const threshold = match[3] ? parseInt(match[3], 10) : parseInt(match[2], 10);
             newToken = new ExplodeDiceToken(match[1], match[2], threshold, start, end, mode);
+        } else if ((match = token.match(/^(\d*)d(\d+)k(\d+)$/i))) {
+            // Dés conservés : 4d6k3
+            newToken = new KeepDropDiceToken(match[1], match[2], parseInt(match[3], 10), null, start, end, mode);
+        } else if ((match = token.match(/^(\d*)d(\d+)d(\d+)$/i))) {
+            // Dés supprimés : 4d6d1
+            newToken = new KeepDropDiceToken(match[1], match[2], null, parseInt(match[3], 10), start, end, mode);
         } else if ((match = token.match(/^(\d*)d(\d+)$/i))) {
             newToken = new DiceToken(match[1], match[2], start, end, mode);
         } else if (token === "\\") {
