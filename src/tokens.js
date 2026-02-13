@@ -98,6 +98,78 @@ export class DiceToken extends Token {
 	get expanded() { return `${this.n}d${this.faces}`; }
 }
 
+/** Dés explosifs : NdX! ou NdX!>=N */
+export class ExplodeDiceToken extends Token {
+	constructor(n, faces, explodeThreshold, start, end, mode = "normal") {
+		super(start, end);
+		this.n = parseInt(n, 10) || 1;
+		this.faces = parseInt(faces, 10);
+		this.explodeThreshold = explodeThreshold || this.faces; // Par défaut, explose au max
+		this.mode = mode;
+		this.min = 1;
+		this.max = this.faces;
+		this._rolls = null;
+		this._value = 0;
+	}
+
+	_rollDice() {
+		const allRolls = [];
+		for (let i = 0; i < this.n; i++) {
+			let roll = this.diceRoll(this.faces);
+			allRolls.push(roll);
+			// Explose si le résultat atteint le threshold
+			while (roll >= this.explodeThreshold) {
+				roll = this.diceRoll(this.faces);
+				allRolls.push(roll);
+			}
+		}
+		return allRolls;
+	}
+
+	_ensureRolled() {
+		if (this._rolls && this._value) return;
+		if (this.mode === "min") {
+			this._rolls = Array(this.n).fill(this.min);
+			this._value = this.n * this.min;
+		} else if (this.mode === "max") {
+			// En mode max, on simule l'explosion jusqu'au max possible
+			this._rolls = [];
+			let totalValue = 0;
+			for (let i = 0; i < this.n; i++) {
+				this._rolls.push(this.max);
+				totalValue += this.max;
+				// Continuer à ajouter des max jusqu'à atteindre le seuil
+				if (this.max >= this.explodeThreshold) {
+					this._rolls.push(this.max);
+					totalValue += this.max;
+				}
+			}
+			this._value = totalValue;
+		} else {
+			this._rolls = this._rollDice();
+			this._value = this._rolls.reduce((a, b) => a + b, 0);
+		}
+	}
+
+	get display() {
+		this._ensureRolled();
+		const decorated = this._rolls.map(r => decorateRoll(r, this.min, this.max));
+		return `[ ${decorated.join(", ")} ]`;
+	}
+
+	get value() {
+		this._ensureRolled();
+		return String(this._value);
+	}
+
+	get allFumble() { return this._rolls?.every(r => r === this.min) ?? true; }
+	get allCrit() { return this._rolls?.length > this.n; } // Crit si on a des explosions
+	get expanded() { 
+		const threshold = this.explodeThreshold === this.faces ? "" : `>=${this.explodeThreshold}`;
+		return `${this.n}d${this.faces}!${threshold}`; 
+	}
+}
+
 /** Fudge Dice : NdF */
 export class FudgeDiceToken extends DiceToken {
 	constructor(n, start, end, mode) { 
