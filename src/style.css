@@ -514,15 +514,16 @@ button {
     align-items: center;
     display: flex;
     justify-content: center;
+    outline: none !important;
 }
 
 button:hover {
     border-color: #646cff;
 }
 
-button:focus,
 button:focus-visible {
-    outline: none;
+    outline: 2px solid var(--border-color);
+    outline-offset: 2px;
 }
 
 
