@@ -3,6 +3,14 @@ import OBR from "@owlbear-rodeo/sdk";
 import { setupDiceRoller } from './roller.js';
 import { setupJustDicesApi } from "./api.js";
 
+// Function to apply theme based on Owlbear theme
+function applyTheme(theme) {
+  const root = document.documentElement;
+  root.setAttribute('data-theme', theme.mode === 'DARK' ? 'dark' : 'light');
+  root.style.setProperty('--text-color', theme.text.primary);
+  root.style.setProperty('--text-color-disabled', theme.text.disabled);
+}
+
 document.querySelector('#app').innerHTML = `
   <div id="inputRow">
     <form id="input">
@@ -22,7 +30,18 @@ document.querySelector('#app').innerHTML = `
   </div>
 `;
 
-OBR.onReady(() => OBR.player.getName().then((playerName) => {
-  setupJustDicesApi();
-  setupDiceRoller(playerName);
-}));
+OBR.onReady(async () => {
+  // Detect and apply theme on load
+  const theme = await OBR.theme.getTheme();
+  applyTheme(theme);
+
+  // Listen for theme changes
+  OBR.theme.onChange((theme) => {
+    applyTheme(theme);
+  });
+
+  OBR.player.getName().then((playerName) => {
+    setupJustDicesApi();
+    setupDiceRoller(playerName);
+  });
+});

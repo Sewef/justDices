@@ -1,6 +1,15 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { submitInput } from './roller.js';
 
+// Function to apply theme based on Owlbear theme
+function applyTheme(theme) {
+  const root = document.documentElement;
+  // Check if theme is dark by looking at the theme object
+  root.setAttribute('data-theme', theme.mode === 'DARK' ? 'dark' : 'light');
+  root.style.setProperty('--text-color', theme.text.primary);
+  root.style.setProperty('--text-color-disabled', theme.text.disabled);
+}
+
 export async function toggleDicePanel() {
     // console.log("JustDices: Toggling dice panel");
     const metadata = await OBR.player.getMetadata();
@@ -31,8 +40,33 @@ export async function toggleDicePanel() {
 let isQuickDiceSetupDone = false;
 let hideRollsFromQuickPanel = false;
 
+// Setup theme listener once at the beginning
+let isThemeListenerSetup = false;
+
+async function setupThemeListener() {
+    if (isThemeListenerSetup) return;
+    
+    try {
+        // Apply theme on load (after OBR is ready)
+        const theme = await OBR.theme.getTheme();
+        applyTheme(theme);
+
+        // Listen for theme changes
+        OBR.theme.onChange((theme) => {
+            applyTheme(theme);
+        });
+        
+        isThemeListenerSetup = true;
+    } catch (error) {
+        console.error("Error setting up theme listener:", error);
+    }
+}
+
 export async function setupQuickDice() {
     if (isQuickDiceSetupDone) return;
+
+    // Setup theme listener if not already done
+    await setupThemeListener();
 
     await new Promise(resolve => {
         const checkExist = setInterval(() => {
@@ -124,5 +158,9 @@ async function createDiceTable() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    setupQuickDice();
+    OBR.onReady(async () => {
+        // Setup theme listener immediately
+        await setupThemeListener();
+        setupQuickDice();
+    });
 });

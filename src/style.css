@@ -3,7 +3,21 @@
     line-height: 1.5;
     font-weight: 400;
 
-    color: rgba(255, 255, 255, 0.87);
+    /* Light mode (default) */
+    --text-color: rgba(0, 0, 0, 0.87);
+    --bg-color: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --border-color: #ccc;
+    --input-bg: #ffffff;
+    --button-hover-bg: #e6f0ff;
+    --card-bg: rgba(200, 200, 200, 0.3);
+    --result-bg: #f0f0f0;
+    --result-text: #333;
+    --panel-bg: #f5f5f5;
+    --panel-text: #333;
+    --panel-border: #ccc;
+    --panel-button-bg: #e0e0e0;
+    --panel-button-hover: #d0d0d0;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -15,10 +29,47 @@
     font-size: 14px;
 }
 
+/* Dark mode */
+[data-theme="dark"] {
+    --text-color: rgba(255, 255, 255, 0.87);
+    --bg-color: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --border-color: #555;
+    --input-bg: #2d2d2d;
+    --button-hover-bg: #1e3a5f;
+    --card-bg: rgba(0, 0, 0, 0.5);
+    --result-bg: #111;
+    --result-text: #eee;
+    --panel-bg: #1e1e1e;
+    --panel-text: white;
+    --panel-border: #888;
+    --panel-button-bg: #333;
+    --panel-button-hover: #555;
+}
+
+/* Light mode */
+[data-theme="light"] {
+    --text-color: rgba(0, 0, 0, 0.87);
+    --bg-color: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --border-color: #ccc;
+    --input-bg: #ffffff;
+    --button-hover-bg: #e6f0ff;
+    --card-bg: rgba(200, 200, 200, 0.3);
+    --result-bg: #f0f0f0;
+    --result-text: #333;
+    --panel-bg: #f5f5f5;
+    --panel-text: #333;
+    --panel-border: #ccc;
+    --panel-button-bg: #e0e0e0;
+    --panel-button-hover: #d0d0d0;
+}
+
 a {
     font-weight: 500;
     color: #646cff;
     text-decoration: inherit;
+    color: var(--text-color);
 }
 
 a:hover {
@@ -30,6 +81,9 @@ body {
     place-items: center;
     min-width: 320px;
     overflow-x: hidden;
+    /* background-color: var(--bg-color); */
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 h1 {
@@ -92,12 +146,14 @@ h1 {
     width: 1%;
     font-size: 0.9em;
     padding: 4px 6px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     box-sizing: border-box;
     height: 28px;
     outline-offset: 2px;
     transition: border-color 0.2s;
+    background-color: var(--input-bg);
+    color: var(--text-color);
 }
 
 @keyframes text-shake {
@@ -137,28 +193,6 @@ h1 {
     outline: none;
 }
 
-button {
-    background: none;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1em;
-    padding: 4px 6px;
-    height: 28px;
-    font-family: inherit;
-    transition: all 0.2s;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-button:hover {
-    border-color: #007bff;
-    background-color: #e6f0ff;
-    transform: scale(1.1);
-}
-
 
 .logo {
     height: 6em;
@@ -182,7 +216,7 @@ button:hover {
     margin: 0.3em;
     border-radius: 8px;
     font-size: 0.85em;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--card-bg);
 }
 
 
@@ -223,12 +257,12 @@ button:hover {
 
 .public-roll {
     border-color: #ffffff;
-    color: #ffffff;
+    color: var(text-color);
 }
 
 .hidden-roll {
     border-color: #8f8f8f;
-    color: #8f8f8f;
+    color: var(--text-color-disabled);
 }
 
 .reroll-button {
@@ -274,10 +308,10 @@ button:hover {
 }
 
 .card .log.result {
-    background: #111;
+    background: var(--result-bg);
     padding: 4px 8px;
     border-radius: 4px;
-    color: #eee;
+    color: var(--result-text);
     font-family: monospace;
     display: -webkit-box;
     line-clamp: 2;
@@ -466,14 +500,20 @@ button:hover {
 
 button {
     border-radius: 8px;
-    border: 1px solid transparent;
+    border: 1px solid var(--border-color);
     padding: 0.6em 1.2em;
+    height: 28px;
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #1a1a1a;
+    background-color: transparent;
     cursor: pointer;
     transition: border-color 0.25s;
+    color: var(--text-color);
+    box-sizing: border-box;
+    align-items: center;
+    display: flex;
+    justify-content: center;
 }
 
 button:hover {
@@ -482,7 +522,7 @@ button:hover {
 
 button:focus,
 button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
+    outline: none;
 }
 
 
@@ -500,13 +540,14 @@ button:focus-visible {
     overflow-y: auto;
     overflow-x: hidden;
 
-    background-color: #1e1e1e;
-    color: white;
+    background-color: var(--panel-bg);
+    color: var(--panel-text);
     padding: 0.5em;
-    border: 2px solid #888;
+    border: 2px solid var(--panel-border);
     border-radius: 10px;
     z-index: 9999;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 
     display: grid;
     /*grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));*/
@@ -520,24 +561,24 @@ button:focus-visible {
     font-weight: bold;
     margin-top: 0.5em;
     padding-bottom: 0.2em;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* Boutons de dés */
 .dice-table button {
-    background: #333;
-    color: white;
-    border: none;
+    background: transparent;
+    color: var(--panel-text);
+    border: 1px solid var(--panel-border);
     border-radius: 4px;
     cursor: pointer;
     padding: 0.2em 0.4em;
     font-size: 0.8em;
-    transition: background-color 0.2s ease;
+    transition: border-color 0.2s ease;
     width: 22px;
 }
 
 .dice-table button:hover {
-    background: #555;
+    border-color: var(--panel-button-hover);
 }
 
 
@@ -546,7 +587,7 @@ button:focus-visible {
     background: none;
     border: none;
     cursor: pointer;
-    color: white;
+    color: var(--panel-text);
     margin-left: auto;
 }
 
