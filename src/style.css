@@ -506,7 +506,7 @@ button {
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: transparent;
+    background-color: var(--bg-secondary);
     cursor: pointer;
     transition: border-color 0.25s;
     color: var(--text-color);
@@ -567,9 +567,9 @@ button:focus-visible {
 
 /* Boutons de dés */
 .dice-table button {
-    background: transparent;
+    background: var(--bg-secondary);
     color: var(--panel-text);
-    border: 1px solid var(--panel-border);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
     padding: 0.2em 0.4em;
