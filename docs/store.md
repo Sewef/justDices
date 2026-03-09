@@ -37,6 +37,10 @@ Outputs are clear, color‑coded, and support private GM rolls. Also, it support
 
 *Example: `/gr db6`, `/gmroll (2dF + 1)`*
 
+`/say <message>` → send a text message to the chat (via API only).
+
+*Example: `/say The beast roars!`*
+
 No prefix? JustDices treats it like public (same as `/r`). 
 
 Case‑insensitive: `/R`, `/Gr`, `dFUDGE`, `Db6` all work.
@@ -53,6 +57,16 @@ Commands history: press ↑ or ↓ to navigate in previous ran commands.
 - Common helpers that work out of the box: `sqrt`, `abs`, `min`, `max`, `ceil`, `floor`, `round`, etc (needs improvements to support more functions).
 
 ⚠️ Functions are evaluated by mathjs. Unknown names will throw a parse error.
+
+### Advanced Dice Modifiers
+- `Nd X!` → exploding dice (reroll when max face is rolled).
+  - Example: `4d6!` → rolls 4d6 and rerolls any die showing 6.
+  - `Nd X!>= Y` → explode on threshold (reroll when die shows Y or higher).
+  - Example: `4d6!>=5` → reroll on 5 or 6.
+- `Nd X k Y` → keep highest Y dice.
+  - Example: `4d6k3` → roll 4d6, keep the best 3.
+- `Nd X d Y` → drop lowest Y dice.
+  - Example: `4d6d1` → roll 4d6, drop the worst 1.
 
 ### Fudge / Fate
 - `dF` or `dFudge` → default 4 dice in the set [-1, 0, 1].
@@ -140,6 +154,8 @@ OBR.broadcast.onMessage("justdices.api.response", (evt) => {
 ```
 
 #### Response structure (`ok: true`)
+
+For **roll** responses:
 ```JS
 {
   callId: string,
@@ -154,6 +170,20 @@ OBR.broadcast.onMessage("justdices.api.response", (evt) => {
     total: number,
     allDiceMin: boolean,
     allDiceMax: boolean
+  }
+}
+```
+
+For **say** responses:
+```JS
+{
+  callId: string,
+  requesterId: string,
+  expressionIn: string,      // what you sent (e.g. "/say Hello!")
+  ok: true,
+  data: {
+    isSay: true,
+    message: string          // the message text
   }
 }
 ```
