@@ -11,24 +11,81 @@ function applyTheme(theme) {
   root.style.setProperty('--text-color-disabled', theme.text.disabled);
 }
 
-document.querySelector('#app').innerHTML = `
-  <div id="inputRow">
-    <form id="input">
-      <div class="input-group">
-        <input type="text" id="inputField" placeholder="1d8+6..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-        <button type="button" id="hiddenRollButton" title="Hidden roll" aria-label="Hidden roll">🙈</button>
-        <button type="button" id="rollButton" title="Roll it" aria-label="Roll it">⚔️</button>
-        <button type="submit" style="display: none;"></button>
-        <button type="button" id="toggleDicePanel" title="Quick Rolls panel" aria-label="Quick Rolls panel">🎲</button>
-      </div>
-    </form>
-  </div>
+// Build DOM structure using createElement instead of innerHTML to prevent XSS
+function setupDOM() {
+  const app = document.querySelector('#app');
+  
+  // Input row section
+  const inputRow = document.createElement('div');
+  inputRow.id = 'inputRow';
+  
+  const form = document.createElement('form');
+  form.id = 'input';
+  
+  const inputGroup = document.createElement('div');
+  inputGroup.className = 'input-group';
+  
+  const inputField = document.createElement('input');
+  inputField.type = 'text';
+  inputField.id = 'inputField';
+  inputField.placeholder = '1d8+6...';
+  inputField.autocomplete = 'off';
+  inputField.setAttribute('autocorrect', 'off');
+  inputField.setAttribute('autocapitalize', 'off');
+  inputField.spellcheck = 'false';
+  
+  const hiddenRollBtn = document.createElement('button');
+  hiddenRollBtn.type = 'button';
+  hiddenRollBtn.id = 'hiddenRollButton';
+  hiddenRollBtn.title = 'Hidden roll';
+  hiddenRollBtn.setAttribute('aria-label', 'Hidden roll');
+  hiddenRollBtn.textContent = '🙈';
+  
+  const rollBtn = document.createElement('button');
+  rollBtn.type = 'button';
+  rollBtn.id = 'rollButton';
+  rollBtn.title = 'Roll it';
+  rollBtn.setAttribute('aria-label', 'Roll it');
+  rollBtn.textContent = '⚔️';
+  
+  const submitBtn = document.createElement('button');
+  submitBtn.type = 'submit';
+  submitBtn.style.display = 'none';
+  
+  const toggleDiceBtn = document.createElement('button');
+  toggleDiceBtn.type = 'button';
+  toggleDiceBtn.id = 'toggleDicePanel';
+  toggleDiceBtn.title = 'Quick Rolls panel';
+  toggleDiceBtn.setAttribute('aria-label', 'Quick Rolls panel');
+  toggleDiceBtn.textContent = '🎲';
+  
+  inputGroup.appendChild(inputField);
+  inputGroup.appendChild(hiddenRollBtn);
+  inputGroup.appendChild(rollBtn);
+  inputGroup.appendChild(submitBtn);
+  inputGroup.appendChild(toggleDiceBtn);
+  
+  form.appendChild(inputGroup);
+  inputRow.appendChild(form);
+  
+  // Log container section
+  const logContainer = document.createElement('div');
+  logContainer.id = 'logContainer';
+  
+  const logTitle = document.createElement('h3');
+  logTitle.textContent = 'Rolls History';
+  
+  const logCards = document.createElement('div');
+  logCards.id = 'logCards';
+  
+  logContainer.appendChild(logTitle);
+  logContainer.appendChild(logCards);
+  
+  app.appendChild(inputRow);
+  app.appendChild(logContainer);
+}
 
-  <div id="logContainer">
-    <h3>Rolls History</h3>
-    <div id="logCards"></div>
-  </div>
-`;
+setupDOM();
 
 OBR.onReady(async () => {
   // Detect and apply theme on load

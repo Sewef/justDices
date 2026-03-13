@@ -54,6 +54,10 @@ async function setupResizer() {
           await OBR.action.setHeight(Math.max(minPanelHeight, startH + (dir.includes('s') ? dy : -dy)));
         } catch (err) {
           console.error("Error during resize:", err);
+          // Reset resize state on error
+          isResizing = false;
+          dirActive = null;
+          document.body.style.cursor = '';
         }
       },
       onPointerUp: e => {

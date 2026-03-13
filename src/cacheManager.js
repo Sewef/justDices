@@ -1,10 +1,12 @@
 /**
  * Cache manager for mathjs evaluations and lazy loading
+ * Uses LRU (Least Recently Used) eviction strategy
  */
 
 let mathEvaluate = null;
 const evaluationCache = new Map();
 const MAX_CACHE_SIZE = 1000;
+const cacheTimestamps = new Map(); // Track last access time for LRU eviction
 
 /**
  * Lazy load mathjs module
@@ -38,8 +40,9 @@ async function loadMathjs() {
 export async function cachedEvaluate(expr) {
   const trimmed = expr.trim();
   
-  // Check cache first
+  // Check cache first and update timestamp (LRU)
   if (evaluationCache.has(trimmed)) {
+    cacheTimestamps.set(trimmed, Date.now());
     return evaluationCache.get(trimmed);
   }
   
@@ -49,12 +52,25 @@ export async function cachedEvaluate(expr) {
   try {
     const result = Number(evaluate(trimmed).toPrecision(12));
     
-    // Store in cache with size limit
+    // Store in cache with LRU eviction
     if (evaluationCache.size >= MAX_CACHE_SIZE) {
-      const firstKey = evaluationCache.keys().next().value;
-      evaluationCache.delete(firstKey);
+      // Find the least recently used entry
+      let oldestKey = null;
+      let oldestTime = Infinity;
+      for (const [key, time] of cacheTimestamps.entries()) {
+        if (time < oldestTime) {
+          oldestTime = time;
+          oldestKey = key;
+        }
+      }
+      // Remove the least recently used entry
+      if (oldestKey !== null) {
+        evaluationCache.delete(oldestKey);
+        cacheTimestamps.delete(oldestKey);
+      }
     }
     evaluationCache.set(trimmed, result);
+    cacheTimestamps.set(trimmed, Date.now()); // Record timestamp for LRU eviction
     
     return result;
   } catch (e) {

@@ -1,25 +1,12 @@
 // api.js
 import OBR from "@owlbear-rodeo/sdk";
 import { parseInput, rollExpression } from "./dice-utils.js";
+import { getCurrentSender } from "./broadcastManager.js";
 
 let SELF_ID_PROMISE = null;
-let apiResponseHandler = null;
+const apiResponseHandlers = new Map(); // Map<callId, handler> for concurrent calls
 
 const getSelfId = () => SELF_ID_PROMISE ??= OBR.player.getId();
-
-const getSender = async () => {
-  try {
-    return {
-      id: await OBR.player.getId(),
-      name: await OBR.player.getName(),
-      color: await OBR.player.getColor(),
-      role: await OBR.player.getRole(),
-    };
-  } catch (e) {
-    console.error("[API] Failed to get sender info:", e);
-    throw new Error("SENDER_ERROR");
-  }
-};
 
 const sendToLog = (sender, text) => OBR.broadcast.sendMessage(
     "justdices.dice-roll",
@@ -52,7 +39,7 @@ export function setupJustDicesApi() {
       // Handle "say" command
       if (parsed.type === "say") {
         if (req.showInLogs) {
-          const sender = await getSender();
+          const sender = await getCurrentSender();
           await sendToLog(sender, { isSay: true, message: parsed.message, original: req.expression });
         }
         const response = { ...base, ok: true, data: { isSay: true, message: parsed.message } };
@@ -69,7 +56,7 @@ export function setupJustDicesApi() {
       }
 
       if (req.showInLogs) {
-        const sender = await getSender();
+        const sender = await getCurrentSender();
         await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: req.expression, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
       }
 
@@ -89,6 +76,9 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
   return new Promise((resolve, reject) => {
     let timeoutId = setTimeout(() => {
       console.error("[API-CLIENT] Timeout waiting for response", { callId, expression });
+      // Clean up the handler on timeout
+      apiResponseHandlers.delete(callId);
+      OBR.broadcast.offMessage("justdices.api.response", apiResponseHandlers.get(callId));
       reject(new Error("API_TIMEOUT"));
     }, timeoutMs);
 
@@ -97,14 +87,12 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
       if (!res || res.callId !== callId || res.requesterId !== requesterId) return;
       
       clearTimeout(timeoutId);
-      // Remove only this specific handler, not all handlers
-      if (apiResponseHandler === handler) {
-        apiResponseHandler = null;
-      }
+      // Remove only this specific handler
+      apiResponseHandlers.delete(callId);
       resolve(res);
     };
 
-    apiResponseHandler = handler;
+    apiResponseHandlers.set(callId, handler);
     OBR.broadcast.onMessage("justdices.api.response", handler);
     OBR.broadcast.sendMessage("justdices.api.request", { callId, expression, showInLogs, requesterId }, { destination: "ALL" });
   });

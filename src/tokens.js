@@ -55,6 +55,18 @@ export class DiceToken extends Token {
 		super(start, end);
 		this.n = parseInt(n, 10) || 1;
 		this.faces = parseInt(faces, 10);
+		
+		// Validate dice parameters to prevent performance issues
+		if (this.n <= 0 || this.faces <= 0) {
+			throw new Error(`Invalid dice parameters: ${this.n}d${this.faces}. Must be positive values.`);
+		}
+		if (this.n > 10000) {
+			throw new Error(`Too many dice: ${this.n}d${this.faces}. Maximum 10000 dice per roll.`);
+		}
+		if (this.faces > 10000) {
+			throw new Error(`Too many faces: ${this.n}d${this.faces}. Maximum 10000 faces per die.`);
+		}
+		
 		this.mode = mode;
 		this.min = 1;
 		this.max = this.faces;
@@ -97,7 +109,19 @@ export class ExplodeDiceToken extends Token {
 		super(start, end);
 		this.n = parseInt(n, 10) || 1;
 		this.faces = parseInt(faces, 10);
-		this.explodeThreshold = explodeThreshold || this.faces; // Par défaut, explose au max
+		
+		// Validate dice parameters to prevent performance issues
+		if (this.n <= 0 || this.faces <= 0) {
+			throw new Error(`Invalid dice parameters: ${this.n}d${this.faces}. Must be positive values.`);
+		}
+		if (this.n > 10000) {
+			throw new Error(`Too many dice: ${this.n}d${this.faces}. Maximum 10000 dice per roll.`);
+		}
+		if (this.faces > 10000) {
+			throw new Error(`Too many faces: ${this.n}d${this.faces}. Maximum 10000 faces per die.`);
+		}
+		
+		this.explodeThreshold = explodeThreshold || this.faces; // Defaults to exploding on max
 		this.mode = mode;
 		this.min = 1;
 		this.max = this.faces;

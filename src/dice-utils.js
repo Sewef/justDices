@@ -73,7 +73,10 @@ export async function parseInput(text) {
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
         
-        if (!parseAndValidateExpression(expr)) return null;
+        if (!parseAndValidateExpression(expr)) {
+            console.warn(`[PARSE] Invalid expression: "${expr}"`);
+            return null;
+        }
         
         return { type: "roll", rollExpression: expr, mode, hidden: false };
     }
@@ -85,7 +88,10 @@ export async function parseInput(text) {
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
         
-        if (!parseAndValidateExpression(expr)) return null;
+        if (!parseAndValidateExpression(expr)) {
+            console.warn(`[PARSE] Invalid expression: "${expr}"`);
+            return null;
+        }
         
         return { type: "roll", rollExpression: expr, mode, hidden: true };
     }
