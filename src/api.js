@@ -3,15 +3,23 @@ import OBR from "@owlbear-rodeo/sdk";
 import { parseInput, rollExpression } from "./dice-utils.js";
 
 let SELF_ID_PROMISE = null;
+let apiResponseHandler = null;
 
 const getSelfId = () => SELF_ID_PROMISE ??= OBR.player.getId();
 
-const getSender = async () => ({
-    id: await OBR.player.getId(),
-    name: await OBR.player.getName(),
-    color: await OBR.player.getColor(),
-    role: await OBR.player.getRole(),
-});
+const getSender = async () => {
+  try {
+    return {
+      id: await OBR.player.getId(),
+      name: await OBR.player.getName(),
+      color: await OBR.player.getColor(),
+      role: await OBR.player.getRole(),
+    };
+  } catch (e) {
+    console.error("[API] Failed to get sender info:", e);
+    throw new Error("SENDER_ERROR");
+  }
+};
 
 const sendToLog = (sender, text) => OBR.broadcast.sendMessage(
     "justdices.dice-roll",
@@ -89,10 +97,14 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
       if (!res || res.callId !== callId || res.requesterId !== requesterId) return;
       
       clearTimeout(timeoutId);
-      OBR.broadcast.onMessage("justdices.api.response", null);
+      // Remove only this specific handler, not all handlers
+      if (apiResponseHandler === handler) {
+        apiResponseHandler = null;
+      }
       resolve(res);
     };
 
+    apiResponseHandler = handler;
     OBR.broadcast.onMessage("justdices.api.response", handler);
     OBR.broadcast.sendMessage("justdices.api.request", { callId, expression, showInLogs, requesterId }, { destination: "ALL" });
   });

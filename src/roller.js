@@ -10,6 +10,7 @@ import {
   setInputValue,
   cleanupListeners 
 } from "./uiManager.js";
+import { clearCache } from "./cacheManager.js";
 
 const minPanelWidth = 350;
 const minPanelHeight = 200;
@@ -18,11 +19,18 @@ let historyIndex = -1;
 let isResizing = false;
 let dirActive = null;
 let startX, startY, startW, startH;
+let lastResizeTime = 0;
+const RESIZE_THROTTLE_MS = 16; // ~60fps
 
 const getCursorFor = dir => (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
 
 async function setupResizer() {
   const panel = document.querySelector('#app');
+  if (!panel) {
+    console.warn("Panel element not found for resizer setup");
+    return;
+  }
+
   const handlers = {};
 
   for (const dir of ['nw', 'ne', 'sw', 'se']) {
@@ -34,9 +42,19 @@ async function setupResizer() {
       onPointerMove: async e => {
         if (!isResizing || dirActive !== dir) return;
         e.preventDefault();
+        
+        // Throttle resize updates for performance
+        const now = Date.now();
+        if (now - lastResizeTime < RESIZE_THROTTLE_MS) return;
+        lastResizeTime = now;
+        
         const dx = e.clientX - startX, dy = e.clientY - startY;
-        await OBR.action.setWidth(Math.max(minPanelWidth, startW + (dir.includes('e') ? dx : -dx)));
-        await OBR.action.setHeight(Math.max(minPanelHeight, startH + (dir.includes('s') ? dy : -dy)));
+        try {
+          await OBR.action.setWidth(Math.max(minPanelWidth, startW + (dir.includes('e') ? dx : -dx)));
+          await OBR.action.setHeight(Math.max(minPanelHeight, startH + (dir.includes('s') ? dy : -dy)));
+        } catch (err) {
+          console.error("Error during resize:", err);
+        }
       },
       onPointerUp: e => {
         if (!isResizing || dirActive !== dir) return;
@@ -105,7 +123,7 @@ export function setupDiceRoller(playerName) {
 
   // Register broadcast listener for incoming rolls
   registerDiceRollListener(async (event) => {
-    const [currentPlayer, isGM] = [await OBR.player.id, await OBR.player.getRole() === "GM"];
+    const [currentPlayer, isGM] = [await OBR.player.getId(), await OBR.player.getRole() === "GM"];
     const isHidden = event.data.text.hidden;
     if (!isHidden || event.data.sender.id === currentPlayer || isGM) {
       addLogEntry(event.data, submitInput);
@@ -173,6 +191,7 @@ export async function submitInput(text, triggerInputError = null) {
  */
 export function cleanup() {
   cleanupListeners();
+  clearCache();
   inputHistory.length = 0;
   historyIndex = -1;
 }

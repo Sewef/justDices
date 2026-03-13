@@ -316,7 +316,7 @@ export class DBToken extends Token {
 		this.n = number || 1;
 		this.code = parseInt(code, 10);
 		if (this.code < 1 || this.code > 28) {
-			throw CalcError(`DB${this.code} doesn't exist in PTU`, { index: start });
+			throw new CalcError(`DB${this.code} doesn't exist in PTU`, { index: start });
 		}
 		const { n, faces, bonus } = DBToken.damageBases[this.code];
 		this.mode = mode;

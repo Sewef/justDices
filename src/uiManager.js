@@ -16,11 +16,16 @@ const eventListeners = new Map(); // Track listeners for cleanup
  */
 export function showInputError(msg) {
   const inputField = document.getElementById("inputField");
-  if (!inputField) return;
+  if (!inputField) {
+    console.warn("Input field not found for error display");
+    return;
+  }
   
   inputField.classList.add("input-error-text", "input-error-outline");
   setTimeout(() => {
-    inputField.classList.remove("input-error-text", "input-error-outline");
+    if (inputField) {
+      inputField.classList.remove("input-error-text", "input-error-outline");
+    }
   }, 1000);
 }
 
@@ -31,6 +36,11 @@ export function showInputError(msg) {
  */
 export function addLogEntry(eventData, onReroll) {
   const logCards = document.getElementById("logCards");
+  if (!logCards) {
+    console.warn("Log cards container not found");
+    return;
+  }
+
   const newEntry = document.createElement("div");
   const { text, sender } = eventData;
 
@@ -123,7 +133,11 @@ export function addLogEntry(eventData, onReroll) {
  */
 export function getInputValue() {
   const input = document.getElementById("inputField");
-  return input ? input.value.trim() : "";
+  if (!input) {
+    console.warn("Input field not found");
+    return "";
+  }
+  return input.value.trim();
 }
 
 /**
@@ -131,7 +145,11 @@ export function getInputValue() {
  */
 export function clearInput() {
   const input = document.getElementById("inputField");
-  if (input) input.value = "";
+  if (input) {
+    input.value = "";
+  } else {
+    console.warn("Input field not found for clearing");
+  }
 }
 
 /**
@@ -140,7 +158,11 @@ export function clearInput() {
  */
 export function setInputValue(value) {
   const input = document.getElementById("inputField");
-  if (input) input.value = value;
+  if (input) {
+    input.value = value;
+  } else {
+    console.warn("Input field not found for setting value");
+  }
 }
 
 /**
