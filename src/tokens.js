@@ -35,13 +35,6 @@ export class DigitToken extends Token {
 	get value() { return this.num; }
 }
 
-/** Text (display only) — returns 0 for value */
-export class TextToken extends Token {
-	constructor(text, start, end) { super(start, end); this.text = text; }
-	get display() { return this.text; }
-	get value() { return ""; }
-}
-
 /** Binary operator */
 export class OperatorToken extends Token {
 	constructor(op, start, end) { super(start, end); this.op = op; }

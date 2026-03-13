@@ -9,7 +9,6 @@ import {
     ParenToken,
     FunctionToken,
     DigitToken,
-    TextToken,
 } from "./tokens.js";
 import { cachedEvaluate } from "./cacheManager.js";
 import { parseAndValidateExpression, TOKEN_REGEX } from "./validationUtils.js";
