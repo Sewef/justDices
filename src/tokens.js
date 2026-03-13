@@ -353,10 +353,11 @@ export class DBToken extends Token {
 
 	get display() {
 		this._ensureRolled();
-		const rollsStr = this._rolls
-			.map(subRoll => subRoll.map(r => decorateRoll(r, 1, this.faces)).join(", "))
-			.join(` ] + [ `);
-		return `[ ${rollsStr} ] + ${this.bonus}`.repeat(this.n);
+		const parts = this._rolls.map(subRoll => {
+			const diceStr = subRoll.map(r => decorateRoll(r, 1, this.faces)).join(", ");
+			return `[ ${diceStr} ] + ${this.bonus}`;
+		});
+		return parts.join(" + ");
 	}
 
 	get value() {
