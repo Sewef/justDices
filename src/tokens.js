@@ -72,7 +72,7 @@ export class DiceToken extends Token {
 		return Array.from({ length: this.n }, () => this.diceRoll(this.faces));
 	}
 	_ensureRolled() {
-		if (this._rolls && this._value) return;
+		if (this._rolls !== null) return;
 		if (this.mode === "min") {
 			this._rolls = Array(this.n).fill(this.min);
 			this._value = this.n * this.min;
@@ -127,18 +127,18 @@ export class ExplodeDiceToken extends Token {
 	}
 
 	_ensureRolled() {
-		if (this._rolls && this._value) return;
+		if (this._rolls !== null) return;
 		if (this.mode === "min") {
 			this._rolls = Array(this.n).fill(this.min);
 			this._value = this.n * this.min;
 		} else if (this.mode === "max") {
-			// In max mode, simulate explosion until max possible
+			// In max mode: each die rolls max, and explodes once more if threshold met
 			this._rolls = [];
 			let totalValue = 0;
 			for (let i = 0; i < this.n; i++) {
 				this._rolls.push(this.max);
 				totalValue += this.max;
-				// Continue adding max rolls until threshold is reached
+				// If max meets threshold, add one explosion
 				if (this.max >= this.explodeThreshold) {
 					this._rolls.push(this.max);
 					totalValue += this.max;
@@ -207,7 +207,7 @@ export class KeepDropDiceToken extends Token {
 	}
 
 	_ensureRolled() {
-		if (this._rolls && this._droppedIndices) return;
+		if (this._rolls !== null && this._droppedIndices !== null) return;
 		
 		if (this.mode === "min") {
 			this._rolls = Array(this.n).fill(this.min);
@@ -267,7 +267,7 @@ export class FudgeDiceToken extends DiceToken {
 		this.max = 1; 
 	}
 	_ensureRolled() {
-		if (this._rolls) return;
+		if (this._rolls !== null) return;
 		super._ensureRolled();
 		if (this.mode === "normal") {
 			this._rolls = this._rolls.map(r => r - 2);
@@ -281,34 +281,34 @@ export class FudgeDiceToken extends DiceToken {
 export class DBToken extends Token {
 	static damageBases = [
 		null,                // index 0 -> unused
-		{ n: 1, faces: 6, bonus: 1 },   // db1
-		{ n: 1, faces: 6, bonus: 3 },   // db2
-		{ n: 1, faces: 6, bonus: 5 },   // db3
-		{ n: 1, faces: 8, bonus: 6 },   // db4
-		{ n: 1, faces: 8, bonus: 8 },   // db5
-		{ n: 2, faces: 6, bonus: 8 },   // db6
-		{ n: 2, faces: 6, bonus: 10 },  // db7
-		{ n: 2, faces: 8, bonus: 10 },  // db8
-		{ n: 2, faces: 10, bonus: 10 },  // db9
-		{ n: 3, faces: 8, bonus: 10 },  // db10
-		{ n: 3, faces: 10, bonus: 10 },  // db11
-		{ n: 3, faces: 12, bonus: 10 },  // db12
-		{ n: 4, faces: 10, bonus: 10 },  // db13
-		{ n: 4, faces: 10, bonus: 15 },  // db14
-		{ n: 4, faces: 10, bonus: 20 },  // db15
-		{ n: 5, faces: 10, bonus: 20 },  // db16
-		{ n: 5, faces: 12, bonus: 25 },  // db17
-		{ n: 6, faces: 12, bonus: 25 },  // db18
-		{ n: 6, faces: 12, bonus: 30 },  // db19
-		{ n: 6, faces: 12, bonus: 35 },  // db20
-		{ n: 6, faces: 12, bonus: 40 },  // db21
-		{ n: 6, faces: 12, bonus: 45 },  // db22
-		{ n: 6, faces: 12, bonus: 50 },  // db23
-		{ n: 6, faces: 12, bonus: 55 },  // db24
-		{ n: 6, faces: 12, bonus: 60 },  // db25
-		{ n: 7, faces: 12, bonus: 65 },  // db26
-		{ n: 8, faces: 12, bonus: 70 },  // db27
-		{ n: 8, faces: 12, bonus: 80 },  // db28
+		{ n: 1, faces: 6, 	bonus: 1 },   // db1
+		{ n: 1, faces: 6, 	bonus: 3 },   // db2
+		{ n: 1, faces: 6, 	bonus: 5 },   // db3
+		{ n: 1, faces: 8, 	bonus: 6 },   // db4
+		{ n: 1, faces: 8, 	bonus: 8 },   // db5
+		{ n: 2, faces: 6, 	bonus: 8 },   // db6
+		{ n: 2, faces: 6, 	bonus: 10 },  // db7
+		{ n: 2, faces: 8, 	bonus: 10 },  // db8
+		{ n: 2, faces: 10, 	bonus: 10 },  // db9
+		{ n: 3, faces: 8, 	bonus: 10 },  // db10
+		{ n: 3, faces: 10, 	bonus: 10 },  // db11
+		{ n: 3, faces: 12, 	bonus: 10 },  // db12
+		{ n: 4, faces: 10, 	bonus: 10 },  // db13
+		{ n: 4, faces: 10, 	bonus: 15 },  // db14
+		{ n: 4, faces: 10, 	bonus: 20 },  // db15
+		{ n: 5, faces: 10, 	bonus: 20 },  // db16
+		{ n: 5, faces: 12, 	bonus: 25 },  // db17
+		{ n: 6, faces: 12, 	bonus: 25 },  // db18
+		{ n: 6, faces: 12, 	bonus: 30 },  // db19
+		{ n: 6, faces: 12, 	bonus: 35 },  // db20
+		{ n: 6, faces: 12, 	bonus: 40 },  // db21
+		{ n: 6, faces: 12, 	bonus: 45 },  // db22
+		{ n: 6, faces: 12, 	bonus: 50 },  // db23
+		{ n: 6, faces: 12, 	bonus: 55 },  // db24
+		{ n: 6, faces: 12, 	bonus: 60 },  // db25
+		{ n: 7, faces: 12, 	bonus: 65 },  // db26
+		{ n: 8, faces: 12, 	bonus: 70 },  // db27
+		{ n: 8, faces: 12, 	bonus: 80 },  // db28
 	]
 
 	constructor(number, code, start, end, mode = "normal") {
@@ -323,19 +323,19 @@ export class DBToken extends Token {
 		this.dbN = n;
 		this.faces = faces;
 		this.bonus = bonus;
-		this._rolls = Array(this.n);
+		this._rolls = null;
 		this._value = 0;
 	}
 
 	_ensureRolled() {
-		if (this._rolls && this._value) return;
+		if (this._rolls !== null) return;
 		const multiplyBonus = this.n;
 		
 		if (this.mode === "min") {
-			this._rolls = Array(this.n).fill(Array(this.dbN).fill(1));
+			this._rolls = Array.from({ length: this.n }, () => Array(this.dbN).fill(1));
 			this._value = multiplyBonus * (this.dbN + this.bonus);
 		} else if (this.mode === "max") {
-			this._rolls = Array(this.n).fill(Array(this.dbN).fill(this.faces));
+			this._rolls = Array.from({ length: this.n }, () => Array(this.dbN).fill(this.faces));
 			this._value = multiplyBonus * (this.dbN * this.faces + this.bonus);
 		} else {
 			this._rolls = Array.from({ length: this.n }, () => 
