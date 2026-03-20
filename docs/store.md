@@ -122,7 +122,6 @@ Make your extension roll dice via OBR broadcasts and get a structured response.
 // Channel: "justdices.api.request"
 OBR.broadcast.sendMessage("justdices.api.request", {
   callId,        // string: unique id to correlate response
-  requesterId,   // string: await OBR.player.getId()
   expression,    // string: same syntax as the input box (e.g. "/r 2d6+3", "max 10d20")
   showInLogs     // boolean (default true): also push to JustDices log
 }, { destination: "ALL" });
@@ -131,7 +130,6 @@ OBR.broadcast.sendMessage("justdices.api.request", {
 ### Parameters
 
 - `callId` *(required)* → A unique identifier for this API call. Used to correlate the request and the response.
-- `requesterId` *(required)* → The ID of the player/extension making the request. Usually use the Extension name and/or the player name (`await OBR.player.getId()`).
 - `expression` *(required)* → The formula or full command (`/r`, `/gr`, `max`, `min` etc allowed).
 - `showInLogs` (*optional, default true)* → Whether to also print in the JustDices log.
 
@@ -141,7 +139,7 @@ Listen on the response channel and filter by your `callId` & `requesterId`.
 ```JS
 OBR.broadcast.onMessage("justdices.api.response", (evt) => {
   const res = evt.data;
-  if (res.callId !== myCallId || res.requesterId !== myRequesterId) return;
+  if (res.callId !== myCallId) return;
 
   if (res.ok) {
     console.log("Total:", res.data.total);
@@ -159,7 +157,6 @@ For **roll** responses:
 ```JS
 {
   callId: string,
-  requesterId: string,
   expressionIn: string,      // what you sent
   ok: true,
   expressionOut: string,     // expanded display (e.g. "(2d6+8) + 1d4")
@@ -178,7 +175,6 @@ For **say** responses:
 ```JS
 {
   callId: string,
-  requesterId: string,
   expressionIn: string,      // what you sent (e.g. "/say Hello!")
   ok: true,
   data: {
@@ -192,7 +188,6 @@ For **say** responses:
 ```JS
 {
   callId: string,
-  requesterId: string,
   expressionIn: string,
   ok: false,
   error: "PARSE_ERROR" | "ROLL_ERROR" | string
