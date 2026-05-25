@@ -57,7 +57,7 @@ export function setupJustDicesApi() {
 
       if (req.showInLogs) {
         const sender = await getCurrentSender();
-        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: req.expression, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
+        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };
