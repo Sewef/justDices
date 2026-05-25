@@ -124,7 +124,7 @@ OBR.broadcast.sendMessage("justdices.api.request", {
   callId,        // string: unique id to correlate response
   expression,    // string: same syntax as the input box (e.g. "/r 2d6+3", "max 10d20")
   showInLogs     // boolean (default true): also push to JustDices log
-}, { destination: "ALL" });
+}, { destination: "LOCAL" });
 ```
 
 ### Parameters
