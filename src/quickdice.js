@@ -27,7 +27,7 @@ export async function toggleDicePanel() {
     OBR.popover.open({
         id: "justdices.quickdice",
         url: "/quickdice.html",
-        height: 300,
+        height: 290,
         width: 200,
         disableClickAway: true,
         hidePaper: true,
