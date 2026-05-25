@@ -63,6 +63,8 @@ export function addLogEntry(eventData, onReroll) {
   // Handle roll entry
   const criticalClass = (text.allDiceMax ? " critical-flex" : "") + (text.allDiceMin ? " critical-failure" : "");
   newEntry.className = "card log-entry-animate" + criticalClass;
+  if (text.allDiceMax) newEntry.classList.add('critical-flex-glow');
+  if (text.allDiceMin) newEntry.classList.add('critical-failure-glow');
 
   if (text.hidden) {
     newEntry.classList.add("hidden-roll");
@@ -94,6 +96,15 @@ export function addLogEntry(eventData, onReroll) {
   `;
 
   logCards.insertBefore(newEntry, logCards.firstChild);
+
+  // After the failure animation ends, remove the class so the card's
+  // border-color transitions back to the player's color (inline style).
+  if (text.allDiceMax) {
+    setTimeout(() => newEntry.classList.remove('critical-flex-glow'), 800);
+  }
+  if (text.allDiceMin) {
+    setTimeout(() => newEntry.classList.remove('critical-failure-glow'), 800);
+  }
 
   // Setup expand/collapse for long results
   const resultSpan = newEntry.querySelector(".log.result");

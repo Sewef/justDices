@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>quickdice Popover</title>
+    <style>
+        :root {
+            /* Light mode (default) */
+            --text-color: rgba(0, 0, 0, 0.87);
+            --bg-color: rgba(241, 243, 249, 0.75);
+            --border-color: #ccc;
+            --panel-bg: rgba(241, 243, 249, 0.75);
+            --panel-text: #333;
+            --panel-border: #ccc;
+            --panel-button-bg: #e0e0e0;
+            --panel-button-hover: #d0d0d0;
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --text-color: rgba(255, 255, 255, 0.87);
+            --bg-color: rgb(34, 38, 57, 0.75);
+            --border-color: #555;
+            --panel-bg: rgb(34, 38, 57, 0.75);
+            --panel-text: white;
+            --panel-border: #888;
+            --panel-button-bg: #2d2d2d;
+            --panel-button-hover: #555;
+        }
+
+        /* Light mode */
+        [data-theme="light"] {
+            --text-color: rgba(0, 0, 0, 0.87);
+            --bg-color: rgba(241, 243, 249, 0.9);
+            --border-color: #ccc;
+            --panel-bg: rgba(241, 243, 249, 0.9);
+            --panel-text: #333;
+            --panel-border: #ccc;
+            --panel-button-bg: #f5f5f5;
+            --panel-button-hover: #d0d0d0;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--panel-bg);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
+            color: var(--panel-text);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        #dicePanel {
+            position: fixed;
+            width: auto;
+            max-width: 90vw;
+            /* Limite la largeur à 90% de la fenêtre */
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            color: var(--panel-text);
+            border-radius: 10px;
+            z-index: 9999;
+            display: grid;
+            gap: 0.25em;
+            font-size: 0.85em;
+            transition: color 0.3s ease;
+        }
+
+        /* Ligne d'entête */
+        .dice-row {
+            grid-column: 1 / -1;
+            font-weight: bold;
+            padding-bottom: 0.2em;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        /* Boutons de dés */
+        .dice-table button {
+            background: var(--panel-button-bg);
+            color: var(--panel-text);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0.3em 0.4em;
+            font-size: 0.9em;
+            transition: background-color 0.2s ease;
+        }
+
+        .dice-table button:hover {
+            background: var(--panel-button-hover);
+        }
+
+        .dice-table th {
+            text-align: right;
+        }
+
+
+        #toggleHiddenRolls {
+            font-size: 1.4em;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--panel-text);
+            margin-left: auto;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.25em;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            flex-grow: 1;
+        }
+
+        .panel-controls {
+            display: flex;
+            gap: 0.3em;
+        }
+
+        .panel-controls button {
+            font-size: 1.2em;
+            padding: 0.2em 0.4em;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: inherit;
+        }
+    </style>
+  <script type="module" crossorigin src="/assets/roller-B4Q3Iz1N.js"></script>
+</head>
+
+<body>
+    <div id="dicePanel" class="dice-panel">
+        <div class="panel-header">
+            <h3>Quick Rolls</h3>
+            <div class="panel-controls">
+                <button id="toggleHiddenRolls" title="Toggle hide rolls" aria-label="Toggle hide rolls">🐵</button>
+                <button id="closeDicePanel" aria-label="Close panel">✖</button>
+            </div>
+        </div>
+        <table id="dice-table" class="dice-table"></table>
+
+    </div>
+</body>
+
+</html>

@@ -18,6 +18,10 @@
     --panel-border: #ccc;
     --panel-button-bg: #e0e0e0;
     --panel-button-hover: #d0d0d0;
+    --accent-primary: #6d28d9;
+    --accent-gold: #d97706;
+    --accent-glow: rgba(109, 40, 217, 0.28);
+    --font-display: system-ui,Avenir,Helvetica,Arial,sans-serif;
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -32,37 +36,43 @@
 /* Dark mode */
 [data-theme="dark"] {
     --text-color: rgba(255, 255, 255, 0.87);
-    --bg-color: #1a1a1a;
-    --bg-secondary: #2d2d2d;
-    --border-color: #555;
-    --input-bg: #2d2d2d;
-    --button-hover-bg: #1e3a5f;
-    --card-bg: rgba(0, 0, 0, 0.5);
-    --result-bg: #111;
-    --result-text: #eee;
-    --panel-bg: #1e1e1e;
-    --panel-text: white;
-    --panel-border: #888;
-    --panel-button-bg: #333;
-    --panel-button-hover: #555;
+    --bg-color: #0d0f1a;
+    --bg-secondary: #171929;
+    --border-color: #3d2b6e;
+    --input-bg: #171929;
+    --button-hover-bg: #2d1b69;
+    --card-bg: rgba(109, 40, 217, 0.08);
+    --result-bg: #0a0c15;
+    --result-text: #c4b5fd;
+    --panel-bg: #0e1020;
+    --panel-text: rgba(255, 255, 255, 0.9);
+    --panel-border: #5b21b6;
+    --panel-button-bg: #1e1b40;
+    --panel-button-hover: #2d2a5e;
+    --accent-primary: #a78bfa;
+    --accent-gold: #fbbf24;
+    --accent-glow: rgba(167, 139, 250, 0.3);
 }
 
 /* Light mode */
 [data-theme="light"] {
     --text-color: rgba(0, 0, 0, 0.87);
-    --bg-color: #ffffff;
-    --bg-secondary: #f5f5f5;
-    --border-color: #ccc;
-    --input-bg: #ffffff;
-    --button-hover-bg: #e6f0ff;
-    --card-bg: rgba(200, 200, 200, 0.3);
-    --result-bg: #f0f0f0;
-    --result-text: #333;
-    --panel-bg: #f5f5f5;
-    --panel-text: #333;
-    --panel-border: #ccc;
-    --panel-button-bg: #e0e0e0;
-    --panel-button-hover: #d0d0d0;
+    --bg-color: #faf8ff;
+    --bg-secondary: #f0ebff;
+    --border-color: #c4b5fd;
+    --input-bg: #faf8ff;
+    --button-hover-bg: #ede9fe;
+    --card-bg: rgba(109, 40, 217, 0.05);
+    --result-bg: #ede9fe;
+    --result-text: #4c1d95;
+    --panel-bg: #f5f0ff;
+    --panel-text: #1e1b4b;
+    --panel-border: #8b5cf6;
+    --panel-button-bg: #e0d9ff;
+    --panel-button-hover: #d1c4fb;
+    --accent-primary: #6d28d9;
+    --accent-gold: #b45309;
+    --accent-glow: rgba(109, 40, 217, 0.22);
 }
 
 a {
@@ -91,6 +101,16 @@ h1 {
     line-height: 1.1;
 }
 
+h3 {
+    font-family: var(--font-display);
+    font-size: 0.8em;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-primary);
+    margin: 0.3em 0;
+    opacity: 0.85;
+}
+
 #app {
     width: 100%;
     max-width: 1280px;
@@ -98,7 +118,7 @@ h1 {
     text-align: left;
     width: 100%;
     max-width: 100%;
-    /*padding: 0 1em;*/
+    padding: 0 5px 5px;
     box-sizing: border-box;
 }
 
@@ -189,7 +209,8 @@ h1 {
 }
 
 #inputField:focus {
-    border-color: #007bff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
     outline: none;
 }
 
@@ -212,11 +233,16 @@ h1 {
 .card {
     padding: 0.5em;
     border: 1px solid;
-    border-left: 8px solid;
+    border-left: 4px solid;
     margin: 0.3em;
     border-radius: 8px;
     font-size: 0.85em;
     background-color: var(--card-bg);
+    transition: box-shadow 0.2s ease, border-color 0.5s ease;
+}
+
+.card:hover {
+    box-shadow: 0 2px 14px var(--accent-glow);
 }
 
 
@@ -240,6 +266,14 @@ h1 {
 #logCards .card .log.result .dropped {
     opacity: 0.5;
     text-decoration: line-through;
+}
+
+#logCards .card .log.total {
+    font-family: var(--font-display);
+    font-size: 1.15em;
+    font-weight: 700;
+    /* color: var(--accent-gold); */
+    text-shadow: 0 0 8px color-mix(in srgb, var(--accent-glow) 50%, transparent);
 }
 
 .log-entry {
@@ -459,6 +493,11 @@ h1 {
     will-change: transform;
 }
 
+.critical-flex-glow {
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.55) !important;
+    border-color: var(--accent-gold) !important;
+}
+
 @keyframes card-failure {
   0%,
   100% {
@@ -497,6 +536,38 @@ h1 {
     backface-visibility: hidden;
 }
 
+.critical-failure-glow {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.55) !important;
+    border-color: #ef4444 !important;
+}
+
+/* ── Say messages ─────────────────────────────── */
+.say-message {
+    font-style: italic;
+    /* opacity: 0.92; */
+}
+
+/* ── Custom scrollbar ─────────────────────────── */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-primary);
+    border-radius: 3px;
+    opacity: 0.6;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--accent-primary) 80%, white);
+}
+
 
 button {
     border-radius: 8px;
@@ -506,9 +577,9 @@ button {
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: var(--bg-secondary);
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 100%);
     cursor: pointer;
-    transition: border-color 0.25s;
+    transition: all 0.2s ease;
     color: var(--text-color);
     box-sizing: border-box;
     align-items: center;
@@ -518,11 +589,12 @@ button {
 }
 
 button:hover {
-    border-color: #646cff;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px var(--accent-glow);
 }
 
 button:focus-visible {
-    outline: 2px solid var(--border-color);
+    outline: 2px solid var(--accent-primary);
     outline-offset: 2px;
 }
 
@@ -541,13 +613,13 @@ button:focus-visible {
     overflow-y: auto;
     overflow-x: hidden;
 
-    background-color: var(--panel-bg);
+    background: linear-gradient(160deg, var(--panel-bg) 0%, var(--bg-color) 100%);
     color: var(--panel-text);
     padding: 0.5em;
     border: 2px solid var(--panel-border);
     border-radius: 10px;
     z-index: 9999;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 0 24px var(--accent-glow), 0 8px 32px rgba(0, 0, 0, 0.6);
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 
     display: grid;
@@ -559,10 +631,15 @@ button:focus-visible {
 /* Ligne d'entête */
 .dice-row {
     grid-column: 1 / -1;
-    font-weight: bold;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.82em;
+    letter-spacing: 0.1em;
+    color: var(--accent-primary);
     margin-top: 0.5em;
     padding-bottom: 0.2em;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--accent-primary);
+    opacity: 0.9;
 }
 
 /* Boutons de dés */
@@ -580,6 +657,11 @@ button:focus-visible {
 
 .dice-table button:hover {
     border-color: var(--panel-button-hover);
+}
+
+/* Shadows are clipped by the panel's overflow — disable them inside */
+#dicePanel button:hover {
+    box-shadow: none;
 }
 
 
@@ -602,7 +684,9 @@ button:focus-visible {
 
 .panel-header h3 {
     margin: 0;
-    font-size: 1.1em;
+    font-size: 0.95em;
+    font-family: var(--font-display);
+    letter-spacing: 0.1em;
     flex-grow: 1;
 }
 
