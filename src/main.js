@@ -28,7 +28,7 @@ function setupDOM() {
   const inputField = document.createElement('input');
   inputField.type = 'text';
   inputField.id = 'inputField';
-  inputField.placeholder = '1d8+6...';
+  inputField.placeholder = '1d8+6 or /help';
   inputField.autocomplete = 'off';
   inputField.setAttribute('autocorrect', 'off');
   inputField.setAttribute('autocapitalize', 'off');

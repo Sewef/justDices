@@ -547,6 +547,64 @@ h3 {
     /* opacity: 0.92; */
 }
 
+/* ── Help card ────────────────────────────────── */
+.help-card {
+    border-color: var(--accent-primary) !important;
+}
+
+.help-card-content {
+    padding: 4px 2px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.help-title {
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 6px;
+    color: var(--accent-primary);
+}
+
+.help-section-title {
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.65;
+    margin-top: 8px;
+    margin-bottom: 2px;
+}
+
+.help-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.help-table td {
+    padding: 1px 6px 1px 0;
+    vertical-align: top;
+}
+
+.help-cmd {
+    font-family: monospace;
+    white-space: nowrap;
+    color: var(--accent-primary);
+    opacity: 0.9;
+    padding-right: 10px !important;
+}
+
+.help-tip {
+    margin-top: 8px;
+    font-size: 0.76rem;
+    opacity: 0.6;
+    font-style: italic;
+}
+
+.help-tip a {
+    color: var(--accent-primary);
+    text-decoration: underline;
+}
+
 /* ── Custom scrollbar ─────────────────────────── */
 ::-webkit-scrollbar {
     width: 5px;

@@ -60,6 +60,11 @@ const isMathJsMethod = async str => {
 =========================== */
 
 export async function parseInput(text) {
+    // Help command
+    if (text.trim().toLowerCase() === "/help") {
+        return { type: "help" };
+    }
+
     // Extract command and content
     const sayMatch = text.match(/^\/say\s+(.+)$/i);
     if (sayMatch) {

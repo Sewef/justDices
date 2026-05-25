@@ -203,3 +203,52 @@ export function cleanupListeners() {
   });
   eventListeners.clear();
 }
+
+/**
+ * Display a help card in the log with available commands
+ */
+export function showHelpCard() {
+  const logCards = document.getElementById("logCards");
+  if (!logCards) return;
+
+  const card = document.createElement("div");
+  card.className = "card log-entry-animate help-card";
+
+  card.innerHTML = `
+    <div class="help-card-content">
+      <div class="help-title">🎲 JustDices — Commands</div>
+      <table class="help-table">
+        <tbody>
+          <tr><td class="help-cmd">/r or /roll &lt;expr&gt;</td><td>Public roll (optional, assumed by default)</td></tr>
+          <tr><td class="help-cmd">/gr or /gmroll &lt;expr&gt;</td><td>Hidden roll (GM only)</td></tr>
+          <tr><td class="help-cmd">/say &lt;msg&gt;</td><td>Send a message</td></tr>
+          <tr><td class="help-cmd">/help</td><td>Show this help</td></tr>
+        </tbody>
+      </table>
+      <div class="help-section-title">Dice notation</div>
+      <table class="help-table">
+        <tbody>
+          <tr><td class="help-cmd">NdX</td><td>Roll N dice of X sides — e.g. <em>2d6</em></td></tr>
+          <tr><td class="help-cmd">NdX!</td><td>Exploding dice — e.g. <em>4d6!</em></td></tr>
+          <tr><td class="help-cmd">NdX!&gt;=T</td><td>Explode on threshold — e.g. <em>4d6!&gt;=5</em></td></tr>
+          <tr><td class="help-cmd">NdXkN</td><td>Keep highest N — e.g. <em>4d6k3</em></td></tr>
+          <tr><td class="help-cmd">NdXdN</td><td>Drop lowest N — e.g. <em>4d6d1</em></td></tr>
+          <tr><td class="help-cmd">NdF</td><td>Fudge/Fate dice</td></tr>
+          <tr><td class="help-cmd">NdbX</td><td>Damage Base 1-25 (PTU 1.05)</td></tr>
+        </tbody>
+      </table>
+      <div class="help-section-title">Modifiers</div>
+      <table class="help-table">
+        <tbody>
+          <tr><td class="help-cmd">max &lt;expr&gt;</td><td>Force maximum values</td></tr>
+          <tr><td class="help-cmd">min &lt;expr&gt;</td><td>Force minimum values</td></tr>
+        </tbody>
+      </table>
+      <div class="help-tip">Math expressions are supported — e.g. <em>/r 2d6+floor(1d4/2)</em><br>
+      Use ↑ and ↓ arrow keys to cycle through command history.<br>
+      Full documentation and API available <a href="https://sewef.github.io/justDices/index.html" target="_blank" rel="noopener noreferrer">here</a>.</div>
+    </div>
+  `;
+
+  logCards.insertBefore(card, logCards.firstChild);
+}

@@ -8,7 +8,8 @@ import {
   getInputValue, 
   clearInput, 
   setInputValue,
-  cleanupListeners 
+  cleanupListeners,
+  showHelpCard
 } from "./uiManager.js";
 import { clearCache } from "./cacheManager.js";
 
@@ -154,6 +155,12 @@ export async function submitInput(text, triggerInputError = null) {
     if (inputHistory.length > 50) inputHistory.shift();
   }
   historyIndex = -1;
+
+  // Handle "help" command
+  if (parsedInput.type === "help") {
+    showHelpCard();
+    return;
+  }
 
   // Handle "say" command
   if (parsedInput.type === "say") {
