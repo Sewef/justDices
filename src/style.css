@@ -686,6 +686,7 @@ button:focus-visible {
     font-size: 0.75em;
 }
 
+
 /* Ligne d'entête */
 .dice-row {
     grid-column: 1 / -1;

@@ -68,25 +68,15 @@ export async function setupQuickDice() {
     // Setup theme listener if not already done
     await setupThemeListener();
 
-    await new Promise(resolve => {
-        const checkExist = setInterval(() => {
-            const diceTable = document.getElementById("dice-table");
-            const dicePanel = document.getElementById("dicePanel");
-            const closeDicePanelBtn = document.getElementById("closeDicePanel");
-            const toggleHiddenRollsBtn = document.getElementById("toggleHiddenRolls");
-
-            if (diceTable && dicePanel && closeDicePanelBtn && toggleHiddenRollsBtn) {
-                clearInterval(checkExist);
-                resolve();
-            }
-        }, 100);
-    });
-
-    // ✅ tous les éléments sont garantis présents ici
     const diceTable = document.getElementById("dice-table");
     const dicePanel = document.getElementById("dicePanel");
     const closeDicePanelBtn = document.getElementById("closeDicePanel");
     const toggleHiddenRollsBtn = document.getElementById("toggleHiddenRolls");
+
+    if (!diceTable || !dicePanel || !closeDicePanelBtn || !toggleHiddenRollsBtn) {
+        console.error("QuickDice setup failed: required DOM elements are missing");
+        return;
+    }
 
     diceTable.innerHTML = await createDiceTable();
 

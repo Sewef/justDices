@@ -84,6 +84,7 @@ export async function cachedEvaluate(expr) {
  */
 export function clearCache() {
   evaluationCache.clear();
+  cacheTimestamps.clear();
   mathEvaluate = null;
 }
 

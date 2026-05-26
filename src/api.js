@@ -74,11 +74,30 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
   const requesterId = await getSelfId();
 
   return new Promise((resolve, reject) => {
-    let timeoutId = setTimeout(() => {
-      console.error("[API-CLIENT] Timeout waiting for response", { callId, expression });
-      // Clean up the handler on timeout
+    // Ensure we do not keep stale listeners for duplicate callIds.
+    const previousHandler = apiResponseHandlers.get(callId);
+    if (previousHandler) {
+      OBR.broadcast.offMessage("justdices.api.response", previousHandler);
       apiResponseHandlers.delete(callId);
-      OBR.broadcast.offMessage("justdices.api.response", apiResponseHandlers.get(callId));
+    }
+
+    let timeoutId = null;
+
+    const cleanup = () => {
+      const registeredHandler = apiResponseHandlers.get(callId);
+      if (registeredHandler) {
+        OBR.broadcast.offMessage("justdices.api.response", registeredHandler);
+        apiResponseHandlers.delete(callId);
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
+
+    timeoutId = setTimeout(() => {
+      console.error("[API-CLIENT] Timeout waiting for response", { callId, expression });
+      cleanup();
       reject(new Error("API_TIMEOUT"));
     }, timeoutMs);
 
@@ -86,9 +105,7 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
       const res = evt.data;
       if (!res || res.callId !== callId || res.requesterId !== requesterId) return;
       
-      clearTimeout(timeoutId);
-      // Remove only this specific handler
-      apiResponseHandlers.delete(callId);
+      cleanup();
       resolve(res);
     };
 

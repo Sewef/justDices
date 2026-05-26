@@ -46,12 +46,13 @@ export function addLogEntry(eventData, onReroll) {
 
   // Handle "say" message
   if (text.isSay) {
+    const safeSenderName = escapeHTML(sender?.name || "Unknown");
     newEntry.className = "card log-entry-animate say-message";
     newEntry.style.borderColor = sender.color;
     newEntry.innerHTML = `
       <div class="log-entry">
         <div class="log-text">
-          <span class="log user">${sender.name}:</span>
+          <span class="log user">${safeSenderName}:</span>
           <span class="log-message">${escapeHTML(text.message)}</span>
         </div>
       </div>
@@ -75,21 +76,24 @@ export function addLogEntry(eventData, onReroll) {
   }
 
   const originalCommand = text.original || text.expression;
+  const safeSenderName = escapeHTML(sender?.name || "Unknown");
+  const safeOriginalCommand = escapeHTML(originalCommand || "");
+  const safeExpandedExpression = escapeHTML(text.expressionExpanded || originalCommand || "");
   const lockIcon = text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : '';
 
   newEntry.innerHTML = `
     <div class="log-entry">
       <div class="log-text">
-        <span class="log user">${lockIcon}${sender.name}:</span>
+        <span class="log user">${lockIcon}${safeSenderName}:</span>
         <span class="log-expression">
-          ${originalCommand}
-          <span class="roll-tooltip" title="${escapeHTML(text.expressionExpanded || originalCommand)}">🔍</span>
+          ${safeOriginalCommand}
+          <span class="roll-tooltip" title="${safeExpandedExpression}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
           <span class="rolls-content">${text.rolls}</span>
         </span> = <span class="log total">${text.total}</span>
       </div>
-      <button class="reroll-button" data-command="${text.original}" title="Reroll">
+      <button class="reroll-button" data-command="${safeOriginalCommand}" title="Reroll">
         <span class="dice-icon">🎲</span>
       </button>
     </div>
@@ -234,7 +238,7 @@ export function showHelpCard() {
           <tr><td class="help-cmd">NdXkN</td><td>Keep highest N — e.g. <em>4d6k3</em></td></tr>
           <tr><td class="help-cmd">NdXdN</td><td>Drop lowest N — e.g. <em>4d6d1</em></td></tr>
           <tr><td class="help-cmd">NdF</td><td>Fudge/Fate dice</td></tr>
-          <tr><td class="help-cmd">NdbX</td><td>Damage Base 1-25 (PTU 1.05)</td></tr>
+          <tr><td class="help-cmd">NdbX</td><td>Damage Base 1-28 (PTU 1.05)</td></tr>
         </tbody>
       </table>
       <div class="help-section-title">Modifiers</div>
