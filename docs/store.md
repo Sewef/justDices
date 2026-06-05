@@ -119,8 +119,8 @@ Make your extension roll dice via OBR broadcasts and get a structured response.
 
 ### Request
 ```JS
-// Channel: "justdices.api.request"
-OBR.broadcast.sendMessage("justdices.api.request", {
+// Channel: "com.sewef.justdices/api.request"
+OBR.broadcast.sendMessage("com.sewef.justdices/api.request", {
   callId,        // string: unique id to correlate response
   expression,    // string: same syntax as the input box (e.g. "/r 2d6+3", "max 10d20")
   showInLogs     // boolean (default true): also push to JustDices log
@@ -135,9 +135,8 @@ OBR.broadcast.sendMessage("justdices.api.request", {
 
 ### Response
 Listen on the response channel and filter by your `callId` & `requesterId`.
-
 ```JS
-OBR.broadcast.onMessage("justdices.api.response", (evt) => {
+OBR.broadcast.onMessage("com.sewef.justdices/api.response", (evt) => {
   const res = evt.data;
   if (res.callId !== myCallId) return;
 

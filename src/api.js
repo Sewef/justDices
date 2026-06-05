@@ -3,19 +3,23 @@ import OBR from "@owlbear-rodeo/sdk";
 import { parseInput, rollExpression } from "./dice-utils.js";
 import { getCurrentSender } from "./broadcastManager.js";
 
+const API_CHANNEL_REQUEST = "com.sewef.justdices/api.request";
+const API_CHANNEL_RESPONSE = "com.sewef.justdices/api.response";
+const DICE_ROLL_CHANNEL = "com.sewef.justdices/dice-roll";
+
 let SELF_ID_PROMISE = null;
 const apiResponseHandlers = new Map(); // Map<callId, handler> for concurrent calls
 
 const getSelfId = () => SELF_ID_PROMISE ??= OBR.player.getId();
 
 const sendToLog = (sender, text) => OBR.broadcast.sendMessage(
-    "justdices.dice-roll",
+    DICE_ROLL_CHANNEL,
     { sender, user: sender.name, text },
     { destination: "ALL" }
 );
 
 export function setupJustDicesApi() {
-  OBR.broadcast.onMessage("justdices.api.request", async (evt) => {
+  OBR.broadcast.onMessage(API_CHANNEL_REQUEST, async (evt) => {
     const req = evt.data;
     if (!req?.callId || !req?.requesterId) {
       console.warn("[API] Invalid request payload", req);
@@ -32,7 +36,7 @@ export function setupJustDicesApi() {
       const parsed = await parseInput(command);
       if (!parsed) {
         console.error("[API] Parse failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "PARSE_ERROR" }, { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, { ...base, ok: false, error: "PARSE_ERROR" }, { destination: "LOCAL" });
         return;
       }
 
@@ -43,7 +47,7 @@ export function setupJustDicesApi() {
           await sendToLog(sender, { isSay: true, message: parsed.message, original: req.expression });
         }
         const response = { ...base, ok: true, data: { isSay: true, message: parsed.message } };
-        await OBR.broadcast.sendMessage("justdices.api.response", response, { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, response, { destination: "LOCAL" });
         return;
       }
 
@@ -51,7 +55,7 @@ export function setupJustDicesApi() {
       const roll = await rollExpression(parsed.rollExpression, parsed.mode);
       if (!roll) {
         console.error("[API] Roll failed");
-        await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: "ROLL_ERROR" }, { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, { ...base, ok: false, error: "ROLL_ERROR" }, { destination: "LOCAL" });
         return;
       }
 
@@ -61,10 +65,10 @@ export function setupJustDicesApi() {
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };
-      await OBR.broadcast.sendMessage("justdices.api.response", response, { destination: "LOCAL" });
+      await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, response, { destination: "LOCAL" });
     } catch (e) {
       console.error("[API] Exception during roll", e);
-      await OBR.broadcast.sendMessage("justdices.api.response", { ...base, ok: false, error: String(e) }, { destination: "LOCAL" });
+      await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, { ...base, ok: false, error: String(e) }, { destination: "LOCAL" });
     }
   });
 }
@@ -77,7 +81,7 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
     // Ensure we do not keep stale listeners for duplicate callIds.
     const previousHandler = apiResponseHandlers.get(callId);
     if (previousHandler) {
-      OBR.broadcast.offMessage("justdices.api.response", previousHandler);
+      OBR.broadcast.offMessage(API_CHANNEL_RESPONSE, previousHandler);
       apiResponseHandlers.delete(callId);
     }
 
@@ -86,7 +90,7 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
     const cleanup = () => {
       const registeredHandler = apiResponseHandlers.get(callId);
       if (registeredHandler) {
-        OBR.broadcast.offMessage("justdices.api.response", registeredHandler);
+        OBR.broadcast.offMessage(API_CHANNEL_RESPONSE, registeredHandler);
         apiResponseHandlers.delete(callId);
       }
       if (timeoutId !== null) {
@@ -110,8 +114,8 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
     };
 
     apiResponseHandlers.set(callId, handler);
-    OBR.broadcast.onMessage("justdices.api.response", handler);
-    OBR.broadcast.sendMessage("justdices.api.request", { callId, expression, showInLogs, requesterId }, { destination: "ALL" });
+    OBR.broadcast.onMessage(API_CHANNEL_RESPONSE, handler);
+    OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs, requesterId }, { destination: "ALL" });
   });
 }
 

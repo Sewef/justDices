@@ -3,6 +3,8 @@
  */
 import OBR from "@owlbear-rodeo/sdk";
 
+const DICE_ROLL_CHANNEL = "justdices.dice-roll";
+
 /**
  * Sends a log entry to all players
  * @param {Object} sender - Sender info {id, name, color, role}
@@ -10,7 +12,7 @@ import OBR from "@owlbear-rodeo/sdk";
  */
 export async function broadcastLogEntry(sender, text) {
   await OBR.broadcast.sendMessage(
-    "justdices.dice-roll",
+    DICE_ROLL_CHANNEL,
     { sender, user: sender.name, text },
     { destination: 'ALL' }
   );
@@ -21,7 +23,7 @@ export async function broadcastLogEntry(sender, text) {
  * @param {Function} onMessage - Callback(event) when message received
  */
 export function registerDiceRollListener(onMessage) {
-  OBR.broadcast.onMessage("justdices.dice-roll", onMessage);
+  OBR.broadcast.onMessage(DICE_ROLL_CHANNEL, onMessage);
 }
 
 /**
