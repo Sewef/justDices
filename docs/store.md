@@ -37,7 +37,7 @@ Outputs are clear, color‑coded, and support private GM rolls. Also, it support
 
 *Example: `/gr db6`, `/gmroll (2dF + 1)`*
 
-`/say <message>` → send a text message to the chat (via API only).
+`/say <message>` → send a text message to the chat.
 
 *Example: `/say The beast roars!`*
 
@@ -54,7 +54,7 @@ Commands history: press ↑ or ↓ to navigate in previous ran commands.
   - Works with arithmetic and parentheses: `2d6 + 3`, `(1d8+2) * 2.`
 - QoL for decimals: `10 * .75` is the same as `10 * 0.75`).
 - Math functions (mathjs): e.g. `sqrt(25)`, `abs(-3) + round(2.5)`.
-- Common helpers that work out of the box: `sqrt`, `abs`, `min`, `max`, `ceil`, `floor`, `round`, etc (needs improvements to support more functions).
+- Common helpers that work out of the box: `sqrt`, `abs`, `min`, `max`, `ceil`, `floor`, `round`, etc.
 
 ⚠️ Functions are evaluated by mathjs. Unknown names will throw a parse error.
 
@@ -69,7 +69,7 @@ Commands history: press ↑ or ↓ to navigate in previous ran commands.
   - Example: `4d6d1` → roll 4d6, drop the worst 1.
 
 ### Fudge / Fate
-- `dF` or `dFudge` → default 4 dice in the set [-1, 0, 1].
+- `dF` or `dFudge` → default 4 dice in the set [-1, 0, 1, 1].
 - Use `XdF` for a custom count: `2dF`, `6dF`, etc.
 
 ### PTU Damage Base (Pokemon Tabletop United 1.05)
