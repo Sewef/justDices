@@ -3,7 +3,7 @@
  */
 import OBR from "@owlbear-rodeo/sdk";
 
-const DICE_ROLL_CHANNEL = "justdices.dice-roll";
+const DICE_ROLL_CHANNEL = "com.sewef.justdices/dice-roll";
 
 /**
  * Sends a log entry to all players
