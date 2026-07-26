@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import { resolve } from "path";
-import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
   base: '/',
@@ -16,12 +15,5 @@ export default defineConfig({
         quickdice: resolve(__dirname, "quickdice.html")
       }
     }
-  },
-  plugins: [
-    viteStaticCopy({
-      targets: [
-        { src: 'docs', dest: '.' } // => dist/doc/**
-      ]
-    })
-  ]
+  }
 });
