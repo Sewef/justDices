@@ -8,7 +8,7 @@ tags:
   - dice
   - automation
 manifest: https://justdices.onrender.com/manifest.json
-learn-more: https://github.com/Sewef/justDices/
+learn-more: https://sewef.github.io/justDices/
 ---
 
 # JustDices
