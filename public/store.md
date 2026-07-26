@@ -2,8 +2,8 @@
 title: JustDices
 description: A formula-based dice roller - fast, flexible, and API‑friendly.
 author: Sewef
-image: https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDicesSplash.png
-icon: https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDices.png
+image: https://justdices.onrender.com/JustDicesSplash.png
+icon: https://justdices.onrender.com/JustDices.png
 tags:
   - dice
   - automation
