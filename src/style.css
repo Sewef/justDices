@@ -299,7 +299,7 @@ h3 {
     color: var(--text-color-disabled);
 }
 
-.blind-roll {
+.masked-roll {
     border-color: #8f8f8f;
     color: var(--text-color-disabled);
 }

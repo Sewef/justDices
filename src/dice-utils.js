@@ -83,7 +83,7 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: false, blind: false };
+        return { type: "roll", rollExpression: expr, mode, hidden: false, masked: false };
     }
 
     const grMatch = text.match(/^\/(gr|gmroll)\s+(.+)$/i);
@@ -98,12 +98,12 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: true, blind: false };
+        return { type: "roll", rollExpression: expr, mode, hidden: true, masked: false };
     }
 
-    const blindMatch = text.match(/^\/(br|blindroll)\s+(.+)$/i);
-    if (blindMatch) {
-        const rollExpression = blindMatch[2].trim();
+    const maskedMatch = text.match(/^\/(mr|maskedroll)\s+(.+)$/i);
+    if (maskedMatch) {
+        const rollExpression = maskedMatch[2].trim();
         const modeMatch = rollExpression.match(/^(max|min)\b/i);
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
@@ -113,7 +113,7 @@ export async function parseInput(text) {
             return null;
         }
 
-        return { type: "roll", rollExpression: expr, mode, hidden: false, blind: true };
+        return { type: "roll", rollExpression: expr, mode, hidden: false, masked: true };
     }
 
     return null;
