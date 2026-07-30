@@ -22,6 +22,7 @@ Outputs are clear, color‑coded, and support private GM rolls. Also, it support
 - Math functions (via mathjs): e.g. `sqrt(25) + ceil(2.1)`.
 - Crit coloring: per‑die min rolls in red, max rolls in green.
 - Public & GM rolls: `/r` public, `/gr` private to GM + roller.
+- Blind rolls: `/br` logs the roll for everyone but hides its result until the roller or a GM reveals it.
 - Handy aliases: `max …` or `min …` to force all dice to max/min.
 - History with reroll: one‑click reroll reuses the exact command and preserves public/private.
 - Stateless: no data is saved locally or remotely; reload clears the list.
@@ -36,6 +37,8 @@ Outputs are clear, color‑coded, and support private GM rolls. Also, it support
 `/gr <expr>` or `/gmroll <expr>` → private roll visible to GM & roller only.
 
 *Example: `/gr db6`, `/gmroll (2dF + 1)`*
+
+`/br <expr>` or `/blindroll <expr>` → blind roll visible to everyone, with its result hidden until revealed.
 
 `/say <message>` → send a text message to the chat.
 

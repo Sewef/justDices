@@ -67,12 +67,17 @@ export function addLogEntry(eventData, onReroll, onReveal) {
   }
 
   // Handle roll entry
-  const criticalClass = (text.allDiceMax ? " critical-flex" : "") + (text.allDiceMin ? " critical-failure" : "");
+  const isConcealed = text.hidden || text.blind;
+  const criticalClass = (!isConcealed && text.allDiceMax ? " critical-flex" : "")
+    + (!isConcealed && text.allDiceMin ? " critical-failure" : "");
   newEntry.className = "card log-entry-animate" + criticalClass;
-  if (text.allDiceMax) newEntry.classList.add('critical-flex-glow');
-  if (text.allDiceMin) newEntry.classList.add('critical-failure-glow');
+  if (!isConcealed && text.allDiceMax) newEntry.classList.add('critical-flex-glow');
+  if (!isConcealed && text.allDiceMin) newEntry.classList.add('critical-failure-glow');
 
-  if (text.hidden) {
+  if (text.blind) {
+    newEntry.classList.add("blind-roll");
+    newEntry.style.borderColor = sender.color + "80";
+  } else if (text.hidden) {
     newEntry.classList.add("hidden-roll");
     newEntry.style.borderColor = sender.color + "80";
   } else {
@@ -83,12 +88,16 @@ export function addLogEntry(eventData, onReroll, onReveal) {
   const originalCommand = text.original || text.expression;
   const safeSenderName = escapeHTML(sender?.name || "Unknown");
   const safeOriginalCommand = escapeHTML(originalCommand || "");
-  const safeExpandedExpression = escapeHTML(text.expressionExpanded || originalCommand || "");
+  const safeExpandedExpression = escapeHTML(text.blind ? "Result hidden until revealed" : (text.expressionExpanded || originalCommand || ""));
   if (text.rollId) newEntry.dataset.rollId = text.rollId;
-  const revealButton = text.hidden && eventData.canReveal
+  const revealButton = (text.hidden || text.blind) && eventData.canReveal
     ? '<button class="reveal-button" title="Reveal to everyone" aria-label="Reveal this roll to everyone"><span aria-hidden="true">👁️</span></button>'
     : "";
-  const lockIcon = text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : '';
+  const lockIcon = text.hidden
+    ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>'
+    : text.blind ? '<span class="hidden-icon" title="Blind Roll">🙈</span>' : '';
+  const displayedRolls = text.blind ? "Result hidden" : text.rolls;
+  const displayedTotal = text.blind ? "?" : text.total;
 
   newEntry.innerHTML = `
     <div class="log-entry">
@@ -99,8 +108,8 @@ export function addLogEntry(eventData, onReroll, onReveal) {
           <span class="roll-tooltip" title="${safeExpandedExpression}">🔍</span>
         </span>
         <span class="log result truncated hidden-rolls">
-          <span class="rolls-content">${text.rolls}</span>
-        </span> = <span class="log total">${text.total}</span>
+          <span class="rolls-content">${displayedRolls}</span>
+        </span> = <span class="log total">${displayedTotal}</span>
       </div>
       ${revealButton}
       <button class="reroll-button" data-command="${safeOriginalCommand}" title="Reroll">
@@ -113,10 +122,10 @@ export function addLogEntry(eventData, onReroll, onReveal) {
 
   // After the failure animation ends, remove the class so the card's
   // border-color transitions back to the player's color (inline style).
-  if (text.allDiceMax) {
+  if (!isConcealed && text.allDiceMax) {
     setTimeout(() => newEntry.classList.remove('critical-flex-glow'), 800);
   }
-  if (text.allDiceMin) {
+  if (!isConcealed && text.allDiceMin) {
     setTimeout(() => newEntry.classList.remove('critical-failure-glow'), 800);
   }
 
@@ -250,6 +259,7 @@ export function showHelpCard() {
         <tbody>
           <tr><td class="help-cmd">/r or /roll &lt;expr&gt;</td><td>Public roll (optional, assumed by default)</td></tr>
           <tr><td class="help-cmd">/gr or /gmroll &lt;expr&gt;</td><td>Hidden roll (GM only)</td></tr>
+          <tr><td class="help-cmd">/br or /blindroll &lt;expr&gt;</td><td>Blind roll (result hidden until revealed)</td></tr>
           <tr><td class="help-cmd">/say &lt;msg&gt;</td><td>Send a message</td></tr>
           <tr><td class="help-cmd">/help</td><td>Show this help</td></tr>
         </tbody>

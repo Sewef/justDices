@@ -130,13 +130,19 @@ export function setupDiceRoller(playerName) {
 
   // Register broadcast listener for incoming rolls
   registerDiceRollListener(async (event) => {
-    const [currentPlayer, isGM] = [await OBR.player.getId(), await OBR.player.getRole() === "GM"];
+    const [currentPlayerId, role] = await Promise.all([
+      OBR.player.getId(),
+      OBR.player.getRole()
+    ]);
+    const isGM = role === "GM";
+    const isRoller = event.data.sender.id === currentPlayerId;
     const isHidden = event.data.text.hidden;
-    if (!isHidden || event.data.sender.id === currentPlayer || isGM) {
+    const isBlind = event.data.text.blind;
+    if (!isHidden || isRoller || isGM) {
       addLogEntry(
         {
           ...event.data,
-          canReveal: isHidden && (event.data.sender.id === currentPlayer || isGM)
+          canReveal: (isHidden || isBlind) && (isRoller || isGM)
         },
         submitInput,
         async (roll) => {
@@ -144,6 +150,7 @@ export function setupDiceRoller(playerName) {
           await broadcastLogEntry(event.data.sender, {
             ...roll,
             hidden: false,
+            blind: false,
             revealedFrom: roll.rollId,
             revealedBy: revealer.id
           });
@@ -205,6 +212,7 @@ export async function submitInput(text, triggerInputError = null) {
     rolls: rollResult.rolls,
     total: rollResult.total,
     hidden: parsedInput.hidden,
+    blind: parsedInput.blind,
     original: text,
     allDiceMax: rollResult.allDiceMax,
     allDiceMin: rollResult.allDiceMin,

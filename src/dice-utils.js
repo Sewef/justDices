@@ -83,7 +83,7 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: false };
+        return { type: "roll", rollExpression: expr, mode, hidden: false, blind: false };
     }
 
     const grMatch = text.match(/^\/(gr|gmroll)\s+(.+)$/i);
@@ -98,7 +98,22 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: true };
+        return { type: "roll", rollExpression: expr, mode, hidden: true, blind: false };
+    }
+
+    const blindMatch = text.match(/^\/(br|blindroll)\s+(.+)$/i);
+    if (blindMatch) {
+        const rollExpression = blindMatch[2].trim();
+        const modeMatch = rollExpression.match(/^(max|min)\b/i);
+        const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+        const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
+
+        if (!parseAndValidateExpression(expr)) {
+            console.warn(`[PARSE] Invalid expression: "${expr}"`);
+            return null;
+        }
+
+        return { type: "roll", rollExpression: expr, mode, hidden: false, blind: true };
     }
 
     return null;

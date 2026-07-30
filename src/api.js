@@ -32,7 +32,7 @@ export function setupJustDicesApi() {
 
     try {
       // Check if expression already has a command prefix
-      const hasCommand = /^\/(r|roll|gr|gmroll|say)\b/i.test(req.expression);
+      const hasCommand = /^\/(r|roll|gr|gmroll|br|blindroll|say)\b/i.test(req.expression);
       const command = hasCommand ? req.expression : "/r " + req.expression;
       
       const parsed = await parseInput(command);
@@ -63,7 +63,7 @@ export function setupJustDicesApi() {
 
       if (req.showInLogs) {
         const sender = await getCurrentSender();
-        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax, rollId: createRollId() });
+        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, blind: parsed.blind, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax, rollId: createRollId() });
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };
@@ -117,7 +117,9 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
 
     apiResponseHandlers.set(callId, handler);
     OBR.broadcast.onMessage(API_CHANNEL_RESPONSE, handler);
-    OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs, requesterId }, { destination: "ALL" });
+    // Only the requester's JustDices instance must execute the roll. Sending to
+    // every connection would create one roll per player, each owned by that player.
+    OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs, requesterId }, { destination: "LOCAL" });
   });
 }
 
