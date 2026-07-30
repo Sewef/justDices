@@ -299,7 +299,8 @@ h3 {
     color: var(--text-color-disabled);
 }
 
-.masked-roll {
+.liar-roll,
+.blind-roll {
     border-color: #8f8f8f;
     color: var(--text-color-disabled);
 }

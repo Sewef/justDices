@@ -83,7 +83,7 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: false, masked: false };
+        return { type: "roll", rollExpression: expr, mode, hidden: false, liar: false, blind: false };
     }
 
     const grMatch = text.match(/^\/(gr|gmroll)\s+(.+)$/i);
@@ -98,12 +98,12 @@ export async function parseInput(text) {
             return null;
         }
         
-        return { type: "roll", rollExpression: expr, mode, hidden: true, masked: false };
+        return { type: "roll", rollExpression: expr, mode, hidden: true, liar: false, blind: false };
     }
 
-    const maskedMatch = text.match(/^\/(mr|maskedroll)\s+(.+)$/i);
-    if (maskedMatch) {
-        const rollExpression = maskedMatch[2].trim();
+    const liarMatch = text.match(/^\/(lr|liarroll)\s+(.+)$/i);
+    if (liarMatch) {
+        const rollExpression = liarMatch[2].trim();
         const modeMatch = rollExpression.match(/^(max|min)\b/i);
         const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
         const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
@@ -113,7 +113,22 @@ export async function parseInput(text) {
             return null;
         }
 
-        return { type: "roll", rollExpression: expr, mode, hidden: false, masked: true };
+        return { type: "roll", rollExpression: expr, mode, hidden: false, liar: true, blind: false };
+    }
+
+    const blindMatch = text.match(/^\/(br|blindroll)\s+(.+)$/i);
+    if (blindMatch) {
+        const rollExpression = blindMatch[2].trim();
+        const modeMatch = rollExpression.match(/^(max|min)\b/i);
+        const mode = modeMatch ? modeMatch[1].toLowerCase() : "normal";
+        const expr = modeMatch ? rollExpression.slice(modeMatch[0].length).trim() : rollExpression;
+
+        if (!parseAndValidateExpression(expr)) {
+            console.warn(`[PARSE] Invalid expression: "${expr}"`);
+            return null;
+        }
+
+        return { type: "roll", rollExpression: expr, mode, hidden: false, liar: false, blind: true };
     }
 
     return null;

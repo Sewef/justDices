@@ -137,13 +137,14 @@ export function setupDiceRoller(playerName) {
     const isGM = role === "GM";
     const isRoller = event.data.sender.id === currentPlayerId;
     const isHidden = event.data.text.hidden;
-    const isMasked = event.data.text.masked;
+    const isLiar = event.data.text.liar;
+    const isBlind = event.data.text.blind;
     if (!isHidden || isRoller || isGM) {
       addLogEntry(
         {
           ...event.data,
-          canViewResult: !isMasked || isRoller,
-          canReveal: (isHidden || isMasked) && (isRoller || isGM)
+          canViewResult: (!isLiar && !isBlind) || (isLiar && isRoller) || (isBlind && isGM),
+          canReveal: (isHidden || isLiar || isBlind) && (isRoller || isGM)
         },
         submitInput,
         async (roll) => {
@@ -151,7 +152,8 @@ export function setupDiceRoller(playerName) {
           await broadcastLogEntry(event.data.sender, {
             ...roll,
             hidden: false,
-            masked: false,
+            liar: false,
+            blind: false,
             revealedFrom: roll.rollId,
             revealedBy: revealer.id
           });
@@ -213,7 +215,8 @@ export async function submitInput(text, triggerInputError = null) {
     rolls: rollResult.rolls,
     total: rollResult.total,
     hidden: parsedInput.hidden,
-    masked: parsedInput.masked,
+    liar: parsedInput.liar,
+    blind: parsedInput.blind,
     original: text,
     allDiceMax: rollResult.allDiceMax,
     allDiceMin: rollResult.allDiceMin,

@@ -18,8 +18,9 @@ It allows quick, flexible dice rolls with support for formulas, hidden rolls, Po
 - **Commands**  
   - `/r d20` → Public roll  
   - `/gr d20` → Private roll (only you + GMs see it)  
-  - `/mr d20` → Masked roll (logged for everyone, result visible only to the roller until revealed)
-  - Without `/r`, `/gr`, or `/mr`, rolls are public by default
+  - `/lr d20` → Liar roll (logged for everyone, result visible only to the roller until revealed)
+  - `/br d20` → Blind roll (logged for everyone, result visible only to GMs until revealed)
+  - Without `/r`, `/gr`, `/lr`, or `/br`, rolls are public by default
   - Compatible with modifiers (`+`, `-`, parentheses, decimals like `.75`)  
 
 - **QuickRolls Panel**  
