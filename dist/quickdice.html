@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8" />
@@ -8,86 +8,98 @@
         :root {
             /* Light mode (default) */
             --text-color: rgba(0, 0, 0, 0.87);
-            --bg-color: rgba(241, 243, 249, 0.75);
-            --border-color: #ccc;
-            --panel-bg: rgba(241, 243, 249, 0.75);
-            --panel-text: #333;
-            --panel-border: #ccc;
-            --panel-button-bg: #e0e0e0;
-            --panel-button-hover: #d0d0d0;
+            --panel-bg: rgba(245, 240, 255, 0.92);
+            --panel-text: #1e1b4b;
+            --panel-border: #8b5cf6;
+            --border-color: #c4b5fd;
+            --panel-button-bg: #e0d9ff;
+            --panel-button-hover: #d1c4fb;
+            --accent-primary: #6d28d9;
+            --accent-glow: rgba(109, 40, 217, 0.22);
         }
 
         /* Dark mode */
         [data-theme="dark"] {
-            --text-color: rgba(255, 255, 255, 0.87);
-            --bg-color: rgb(34, 38, 57, 0.75);
-            --border-color: #555;
-            --panel-bg: rgb(34, 38, 57, 0.75);
-            --panel-text: white;
-            --panel-border: #888;
-            --panel-button-bg: #2d2d2d;
-            --panel-button-hover: #555;
+            --text-color: rgba(255, 255, 255, 0.6);
+            --panel-bg: rgba(34, 38, 57, 0.75);
+            --panel-text: rgba(255, 255, 255, 0.9);
+            --panel-border: #5b21b6;
+            --border-color: #3d2b6e;
+            --panel-button-bg: #1e1b40;
+            --panel-button-hover: #2d2a5e;
+            --accent-primary: #a78bfa;
+            --accent-glow: rgba(167, 139, 250, 0.3);
         }
 
         /* Light mode */
         [data-theme="light"] {
             --text-color: rgba(0, 0, 0, 0.87);
-            --bg-color: rgba(241, 243, 249, 0.9);
-            --border-color: #ccc;
-            --panel-bg: rgba(241, 243, 249, 0.9);
-            --panel-text: #333;
-            --panel-border: #ccc;
-            --panel-button-bg: #f5f5f5;
-            --panel-button-hover: #d0d0d0;
+            --panel-bg: rgba(245, 240, 255, 0.75);
+            --panel-text: #1e1b4b;
+            --panel-border: #8b5cf6;
+            --border-color: #c4b5fd;
+            --panel-button-bg: #e0d9ff;
+            --panel-button-hover: #d1c4fb;
+            --accent-primary: #6d28d9;
+            --accent-glow: rgba(109, 40, 217, 0.22);
         }
 
         body {
-            font-family: sans-serif;
+            font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
             background-color: var(--panel-bg);
-            background-image: linear-gradient(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.05));
             color: var(--panel-text);
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .quickdice-dragging body {
+            opacity: 0;
         }
 
         #dicePanel {
             position: fixed;
             width: auto;
             max-width: 90vw;
-            /* Limite la largeur à 90% de la fenêtre */
+            /* Limit the width to 90% of the viewport */
             overflow-y: auto;
             overflow-x: hidden;
 
             color: var(--panel-text);
-            border-radius: 10px;
-            z-index: 9999;
+            /* border: 2px solid var(--panel-border); */
+            /* border-radius: 10px; */
+            /* z-index: 9999; */
             display: grid;
-            gap: 0.25em;
+            /* gap: 0.25em; */
             font-size: 0.85em;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, border-color 0.3s ease;
+            top: 0;
         }
 
-        /* Ligne d'entête */
+        /* Header row */
         .dice-row {
             grid-column: 1 / -1;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.82em;
+            letter-spacing: 0.08em;
+            color: var(--accent-primary);
             padding-bottom: 0.2em;
-            border-bottom: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--accent-primary);
+            opacity: 0.9;
         }
 
-        /* Boutons de dés */
+        /* Dice buttons */
         .dice-table button {
             background: var(--panel-button-bg);
             color: var(--panel-text);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 4px;
             cursor: pointer;
             padding: 0.3em 0.4em;
             font-size: 0.9em;
-            transition: background-color 0.2s ease;
+            transition: border-color 0.2s ease;
         }
 
         .dice-table button:hover {
-            background: var(--panel-button-hover);
+            border-color: var(--accent-primary);
         }
 
         .dice-table th {
@@ -111,10 +123,37 @@
             gap: 0.25em;
         }
 
+        #dragDicePanel {
+            align-self: stretch;
+            display: flex;
+            align-items: center;
+            padding: 0 0.35em;
+            border: 0;
+            background: none;
+            color: var(--accent-primary);
+            cursor: grab;
+            touch-action: none;
+            user-select: none;
+        }
+
+        #dragDicePanel:active {
+            cursor: grabbing;
+        }
+
+        #dragDicePanel::before {
+            content: "⠿";
+            font-size: 1.25em;
+            line-height: 1;
+        }
+
         .panel-header h3 {
-            margin: 0;
-            font-size: 1.1em;
-            flex-grow: 1;
+            font-family: var(--font-display);
+            font-size: 0.8em;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--accent-primary);
+            margin: 0.3em 0;
+            opacity: 0.85;
         }
 
         .panel-controls {
@@ -131,20 +170,21 @@
             color: inherit;
         }
     </style>
-  <script type="module" crossorigin src="/assets/roller-B4Q3Iz1N.js"></script>
+  <script type="module" crossorigin src="/assets/roller-CaTFXi-6.js"></script>
 </head>
 
 <body>
     <div id="dicePanel" class="dice-panel">
         <div class="panel-header">
+            <button id="dragDicePanel" type="button" title="Move panel"
+                aria-label="Move panel"></button>
             <h3>Quick Rolls</h3>
             <div class="panel-controls">
                 <button id="toggleHiddenRolls" title="Toggle hide rolls" aria-label="Toggle hide rolls">🐵</button>
                 <button id="closeDicePanel" aria-label="Close panel">✖</button>
             </div>
         </div>
-        <table id="dice-table" class="dice-table"></table>
-
+        <table id="dice-table" class="dice-table"></table>
 
     </div>
 </body>

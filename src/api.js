@@ -11,6 +11,8 @@ let SELF_ID_PROMISE = null;
 const apiResponseHandlers = new Map(); // Map<callId, handler> for concurrent calls
 
 const getSelfId = () => SELF_ID_PROMISE ??= OBR.player.getId();
+const createRollId = () => globalThis.crypto?.randomUUID?.()
+  ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const sendToLog = (sender, text) => OBR.broadcast.sendMessage(
     DICE_ROLL_CHANNEL,
@@ -61,7 +63,7 @@ export function setupJustDicesApi() {
 
       if (req.showInLogs) {
         const sender = await getCurrentSender();
-        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax });
+        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax, rollId: createRollId() });
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };

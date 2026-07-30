@@ -299,16 +299,26 @@ h3 {
     color: var(--text-color-disabled);
 }
 
-.reroll-button {
+.reroll-button,
+.reveal-button {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: center;
     background: none;
     border: none;
     cursor: pointer;
     padding: 4px;
     font-size: 1.2em;
     transition: transform 0.3s ease;
+}
+
+.reveal-button:hover {
+    transform: scale(1.15);
+}
+
+.reveal-button:disabled {
+    cursor: wait;
+    opacity: 0.45;
 }
 
 .reroll-button .dice-icon {

@@ -22,6 +22,8 @@ let dirActive = null;
 let startX, startY, startW, startH;
 let lastResizeTime = 0;
 const RESIZE_THROTTLE_MS = 16; // ~60fps
+const createRollId = () => globalThis.crypto?.randomUUID?.()
+  ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const getCursorFor = dir => (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
 
@@ -131,7 +133,22 @@ export function setupDiceRoller(playerName) {
     const [currentPlayer, isGM] = [await OBR.player.getId(), await OBR.player.getRole() === "GM"];
     const isHidden = event.data.text.hidden;
     if (!isHidden || event.data.sender.id === currentPlayer || isGM) {
-      addLogEntry(event.data, submitInput);
+      addLogEntry(
+        {
+          ...event.data,
+          canReveal: isHidden && (event.data.sender.id === currentPlayer || isGM)
+        },
+        submitInput,
+        async (roll) => {
+          const revealer = await getCurrentSender();
+          await broadcastLogEntry(event.data.sender, {
+            ...roll,
+            hidden: false,
+            revealedFrom: roll.rollId,
+            revealedBy: revealer.id
+          });
+        }
+      );
     }
   });
 }
@@ -190,7 +207,8 @@ export async function submitInput(text, triggerInputError = null) {
     hidden: parsedInput.hidden,
     original: text,
     allDiceMax: rollResult.allDiceMax,
-    allDiceMin: rollResult.allDiceMin
+    allDiceMin: rollResult.allDiceMin,
+    rollId: createRollId()
   };
 
   await broadcastLogEntry(sender, resultStr);

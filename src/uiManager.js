@@ -34,7 +34,7 @@ export function showInputError(msg) {
  * @param {Object} eventData - {text, sender}
  * @param {Function} onReroll - Callback(command) when reroll clicked
  */
-export function addLogEntry(eventData, onReroll) {
+export function addLogEntry(eventData, onReroll, onReveal) {
   const logCards = document.getElementById("logCards");
   if (!logCards) {
     console.warn("Log cards container not found");
@@ -43,6 +43,11 @@ export function addLogEntry(eventData, onReroll) {
 
   const newEntry = document.createElement("div");
   const { text, sender } = eventData;
+
+  if (text.revealedFrom) {
+    document.querySelectorAll(`[data-roll-id="${CSS.escape(text.revealedFrom)}"]`)
+      .forEach(entry => entry.remove());
+  }
 
   // Handle "say" message
   if (text.isSay) {
@@ -79,6 +84,10 @@ export function addLogEntry(eventData, onReroll) {
   const safeSenderName = escapeHTML(sender?.name || "Unknown");
   const safeOriginalCommand = escapeHTML(originalCommand || "");
   const safeExpandedExpression = escapeHTML(text.expressionExpanded || originalCommand || "");
+  if (text.rollId) newEntry.dataset.rollId = text.rollId;
+  const revealButton = text.hidden && eventData.canReveal
+    ? '<button class="reveal-button" title="Reveal to everyone" aria-label="Reveal this roll to everyone"><span aria-hidden="true">👁️</span></button>'
+    : "";
   const lockIcon = text.hidden ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>' : '';
 
   newEntry.innerHTML = `
@@ -93,6 +102,7 @@ export function addLogEntry(eventData, onReroll) {
           <span class="rolls-content">${text.rolls}</span>
         </span> = <span class="log total">${text.total}</span>
       </div>
+      ${revealButton}
       <button class="reroll-button" data-command="${safeOriginalCommand}" title="Reroll">
         <span class="dice-icon">🎲</span>
       </button>
@@ -140,6 +150,21 @@ export function addLogEntry(eventData, onReroll) {
   
   rerollBtn.addEventListener("click", handleReroll);
   trackListener(rerollBtn, "click", handleReroll);
+
+  const revealBtn = newEntry.querySelector(".reveal-button");
+  if (revealBtn && onReveal) {
+    const handleReveal = async () => {
+      revealBtn.disabled = true;
+      try {
+        await onReveal(text);
+      } catch (error) {
+        revealBtn.disabled = false;
+        console.error("Failed to reveal roll", error);
+      }
+    };
+    revealBtn.addEventListener("click", handleReveal);
+    trackListener(revealBtn, "click", handleReveal);
+  }
 }
 
 /**
