@@ -86,9 +86,12 @@ export function addLogEntry(eventData, onReroll, onReveal) {
   }
 
   const originalCommand = text.original || text.expression;
+  const blindDetailsAreHidden = text.blind && !eventData.canSeeBlindDetails;
   const safeSenderName = escapeHTML(sender?.name || "Unknown");
   const safeOriginalCommand = escapeHTML(originalCommand || "");
-  const safeExpandedExpression = escapeHTML(text.blind ? "Result hidden until revealed" : (text.expressionExpanded || originalCommand || ""));
+  const safeExpandedExpression = escapeHTML(blindDetailsAreHidden
+    ? "Result hidden until revealed"
+    : (text.expressionExpanded || originalCommand || ""));
   if (text.rollId) newEntry.dataset.rollId = text.rollId;
   const revealButton = (text.hidden || text.blind) && eventData.canReveal
     ? '<button class="reveal-button" title="Reveal to everyone" aria-label="Reveal this roll to everyone"><span aria-hidden="true">👁️</span></button>'
@@ -96,8 +99,8 @@ export function addLogEntry(eventData, onReroll, onReveal) {
   const lockIcon = text.hidden
     ? '<span class="hidden-icon" title="Hidden Roll">🔒</span>'
     : text.blind ? '<span class="hidden-icon" title="Blind Roll">🙈</span>' : '';
-  const displayedRolls = text.blind ? "Result hidden" : text.rolls;
-  const displayedTotal = text.blind ? "?" : text.total;
+  const displayedRolls = blindDetailsAreHidden ? "Result hidden" : text.rolls;
+  const displayedTotal = blindDetailsAreHidden ? "?" : text.total;
 
   newEntry.innerHTML = `
     <div class="log-entry">

@@ -142,6 +142,7 @@ export function setupDiceRoller(playerName) {
       addLogEntry(
         {
           ...event.data,
+          canSeeBlindDetails: isGM,
           canReveal: (isHidden || isBlind) && (isRoller || isGM)
         },
         submitInput,
