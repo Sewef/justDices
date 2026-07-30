@@ -201,10 +201,10 @@ h3 {
 }
 
 .input-error-outline {
-    /* box-shadow au lieu de border pour éviter le décalage */
+    /* Use box-shadow instead of border to prevent layout shifts */
     box-shadow: 0 0 5px 2px red;
     border: 1px solid transparent;
-    /* garde la largeur border sans changer visuel */
+    /* Preserve the border width without changing the appearance */
     transition: box-shadow 0.3s ease;
 }
 
@@ -356,7 +356,7 @@ h3 {
     white-space: normal;
     position: relative;
     max-height: 3.3em;
-    /* environ 2 lignes */
+    /* About two lines */
     transition: max-height 0.3s ease;
     content-visibility: auto;
     min-width: 0;
@@ -369,7 +369,7 @@ h3 {
     display: block;
     line-height: 1.5em;
     max-height: 3.3em;
-    /* 2 lignes approx */
+    /* Approximately two lines */
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -413,12 +413,12 @@ h3 {
 
 .roll-tooltip {
     cursor: default;
-    /* flèche classique */
+    /* Standard arrow */
     user-select: none;
-    /* empêche la sélection du texte */
+    /* Prevent text selection */
     margin-left: 0.5em;
     display: inline-block;
-    /* évite que le span se comporte comme texte */
+    /* Prevent the span from behaving like text */
 }
 
 .log-entry {
@@ -667,7 +667,7 @@ button:focus-visible {
     right: 1rem;
     width: auto;
     max-width: 90vw;
-    /* Limite la largeur à 90% de la fenêtre */
+    /* Limit the width to 90% of the viewport */
     overflow-y: auto;
     overflow-x: hidden;
 
@@ -687,7 +687,7 @@ button:focus-visible {
 }
 
 
-/* Ligne d'entête */
+/* Header row */
 .dice-row {
     grid-column: 1 / -1;
     font-family: var(--font-display);
@@ -701,7 +701,7 @@ button:focus-visible {
     opacity: 0.9;
 }
 
-/* Boutons de dés */
+/* Dice buttons */
 .dice-table button {
     background: var(--bg-secondary);
     color: var(--panel-text);
@@ -768,13 +768,13 @@ button:focus-visible {
     height: 16px;
     position: absolute;
     right: 8px;
-    /* plus éloigné de la scrollbar */
+    /* Keep farther away from the scrollbar */
     bottom: 8px;
     cursor: se-resize;
     border-radius: 4px;
 }
 
-/* Zones de resize de 16×16px en coin */
+/* 16×16px resize handles in the corners */
 .resize-handle {
     position: fixed;
     width: 24px;

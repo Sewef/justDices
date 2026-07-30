@@ -12,7 +12,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
-        quickdice: resolve(__dirname, "quickdice.html")
+        quickdice: resolve(__dirname, "quickdice.html"),
+        quickdiceDrag: resolve(__dirname, "quickdice-drag.html")
       }
     }
   }
