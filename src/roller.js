@@ -13,6 +13,7 @@ import {
 } from "./uiManager.js";
 import { clearCache } from "./cacheManager.js";
 import { getRollVisibility } from "./rollVisibility.js";
+import { cleanupPlayerContext, getPlayerContext } from "./playerContext.js";
 
 const minPanelWidth = 350;
 const minPanelHeight = 200;
@@ -25,6 +26,7 @@ let lastResizeTime = 0;
 const RESIZE_THROTTLE_MS = 16; // ~60fps
 const createRollId = () => globalThis.crypto?.randomUUID?.()
   ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+let unsubscribeDiceRoll = null;
 
 const getCursorFor = dir => (dir === 'nw' || dir === 'se') ? 'nwse-resize' : 'nesw-resize';
 
@@ -130,11 +132,9 @@ export function setupDiceRoller(playerName) {
   });
 
   // Register broadcast listener for incoming rolls
-  registerDiceRollListener(async (event) => {
-    const [currentPlayerId, role] = await Promise.all([
-      OBR.player.getId(),
-      OBR.player.getRole()
-    ]);
+  unsubscribeDiceRoll?.();
+  unsubscribeDiceRoll = registerDiceRollListener(async (event) => {
+    const { id: currentPlayerId, role } = await getPlayerContext();
     const visibility = getRollVisibility(
       event.data.text,
       event.data.sender.id,
@@ -233,6 +233,9 @@ export async function submitInput(text, triggerInputError = null) {
  * Cleanup resources when page unloads
  */
 export function cleanup() {
+  unsubscribeDiceRoll?.();
+  unsubscribeDiceRoll = null;
+  cleanupPlayerContext();
   cleanupListeners();
   clearCache();
   inputHistory.length = 0;

@@ -1,8 +1,17 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { registerDiceRollListener } from "./broadcastManager.js";
 import { getRollVisibility } from "./rollVisibility.js";
+import { cleanupJustDicesApi, setupJustDicesApi } from "./api.js";
+import {
+  cleanupPlayerContext,
+  getPlayerContext,
+  initializePlayerContext
+} from "./playerContext.js";
 
 OBR.onReady(async () => {
+  await initializePlayerContext();
+  setupJustDicesApi();
+
   const restoreBadge = async () => {
     await Promise.all([
       OBR.action.setBadgeBackgroundColor(),
@@ -10,7 +19,7 @@ OBR.onReady(async () => {
     ]);
   };
 
-  OBR.action.onOpenChange((isOpen) => {
+  const unsubscribeOpenChange = OBR.action.onOpenChange((isOpen) => {
     if (isOpen) {
       restoreBadge().catch(error => {
         console.error("Unable to restore the JustDices badge:", error);
@@ -18,15 +27,12 @@ OBR.onReady(async () => {
     }
   });
 
-  registerDiceRollListener(async (event) => {
+  const unsubscribeDiceRoll = registerDiceRollListener(async (event) => {
     try {
       if (!event.data?.text) return;
       if (await OBR.action.isOpen()) return;
 
-      const [playerId, role] = await Promise.all([
-        OBR.player.getId(),
-        OBR.player.getRole()
-      ]);
+      const { id: playerId, role } = await getPlayerContext();
       const visibility = getRollVisibility(
         event.data.text,
         event.data.sender?.id,
@@ -44,4 +50,11 @@ OBR.onReady(async () => {
       console.error("Unable to update the JustDices badge color:", error);
     }
   });
+
+  window.addEventListener("beforeunload", () => {
+    unsubscribeOpenChange();
+    unsubscribeDiceRoll();
+    cleanupJustDicesApi();
+    cleanupPlayerContext();
+  }, { once: true });
 });

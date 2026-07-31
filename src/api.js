@@ -1,27 +1,22 @@
 // api.js
 import OBR from "@owlbear-rodeo/sdk";
 import { parseInput, rollExpression } from "./dice-utils.js";
-import { getCurrentSender } from "./broadcastManager.js";
+import { broadcastLogEntry, getCurrentSender } from "./broadcastManager.js";
+import { getPlayerContext } from "./playerContext.js";
 
 const API_CHANNEL_REQUEST = "com.sewef.justdices/api.request";
 const API_CHANNEL_RESPONSE = "com.sewef.justdices/api.response";
-const DICE_ROLL_CHANNEL = "com.sewef.justdices/dice-roll";
+let apiRequestUnsubscribe = null;
+const apiResponseHandlers = new Map(); // Map<callId, unsubscribe> for concurrent calls
 
-let SELF_ID_PROMISE = null;
-const apiResponseHandlers = new Map(); // Map<callId, handler> for concurrent calls
-
-const getSelfId = () => SELF_ID_PROMISE ??= OBR.player.getId();
+const getSelfId = async () => (await getPlayerContext()).id;
 const createRollId = () => globalThis.crypto?.randomUUID?.()
   ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const sendToLog = (sender, text) => OBR.broadcast.sendMessage(
-    DICE_ROLL_CHANNEL,
-    { sender, user: sender.name, text },
-    { destination: "ALL" }
-);
-
 export function setupJustDicesApi() {
-  OBR.broadcast.onMessage(API_CHANNEL_REQUEST, async (evt) => {
+  if (apiRequestUnsubscribe) return apiRequestUnsubscribe;
+
+  apiRequestUnsubscribe = OBR.broadcast.onMessage(API_CHANNEL_REQUEST, async (evt) => {
     const req = evt.data;
     if (!req?.callId || !req?.requesterId) {
       console.warn("[API] Invalid request payload", req);
@@ -46,7 +41,7 @@ export function setupJustDicesApi() {
       if (parsed.type === "say") {
         if (req.showInLogs) {
           const sender = await getCurrentSender();
-          await sendToLog(sender, { isSay: true, message: parsed.message, original: req.expression });
+          await broadcastLogEntry(sender, { isSay: true, message: parsed.message, original: req.expression });
         }
         const response = { ...base, ok: true, data: { isSay: true, message: parsed.message } };
         await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, response, { destination: "LOCAL" });
@@ -63,7 +58,7 @@ export function setupJustDicesApi() {
 
       if (req.showInLogs) {
         const sender = await getCurrentSender();
-        await sendToLog(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, liar: parsed.liar, blind: parsed.blind, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax, rollId: createRollId() });
+        await broadcastLogEntry(sender, { expressionExpanded: roll.expanded, rolls: roll.rolls, total: roll.total, hidden: parsed.hidden, liar: parsed.liar, blind: parsed.blind, original: command, allDiceMin: roll.allDiceMin, allDiceMax: roll.allDiceMax, rollId: createRollId() });
       }
 
       const response = { ...base, ok: true, expressionOut: roll.expression, rolls: roll.rolls, data: roll };
@@ -73,6 +68,8 @@ export function setupJustDicesApi() {
       await OBR.broadcast.sendMessage(API_CHANNEL_RESPONSE, { ...base, ok: false, error: String(e) }, { destination: "LOCAL" });
     }
   });
+
+  return apiRequestUnsubscribe;
 }
 
 // --- Client ---
@@ -81,18 +78,18 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
 
   return new Promise((resolve, reject) => {
     // Ensure we do not keep stale listeners for duplicate callIds.
-    const previousHandler = apiResponseHandlers.get(callId);
-    if (previousHandler) {
-      OBR.broadcast.offMessage(API_CHANNEL_RESPONSE, previousHandler);
+    const previousUnsubscribe = apiResponseHandlers.get(callId);
+    if (previousUnsubscribe) {
+      previousUnsubscribe();
       apiResponseHandlers.delete(callId);
     }
 
     let timeoutId = null;
 
     const cleanup = () => {
-      const registeredHandler = apiResponseHandlers.get(callId);
-      if (registeredHandler) {
-        OBR.broadcast.offMessage(API_CHANNEL_RESPONSE, registeredHandler);
+      const registeredUnsubscribe = apiResponseHandlers.get(callId);
+      if (registeredUnsubscribe) {
+        registeredUnsubscribe();
         apiResponseHandlers.delete(callId);
       }
       if (timeoutId !== null) {
@@ -115,11 +112,20 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
       resolve(res);
     };
 
-    apiResponseHandlers.set(callId, handler);
-    OBR.broadcast.onMessage(API_CHANNEL_RESPONSE, handler);
+    const unsubscribeResponse = OBR.broadcast.onMessage(API_CHANNEL_RESPONSE, handler);
+    apiResponseHandlers.set(callId, unsubscribeResponse);
     // Only the requester's JustDices instance must execute the roll. Sending to
     // every connection would create one roll per player, each owned by that player.
     OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs, requesterId }, { destination: "LOCAL" });
   });
+}
+
+export function cleanupJustDicesApi() {
+  apiRequestUnsubscribe?.();
+  apiRequestUnsubscribe = null;
+  for (const unsubscribeResponse of apiResponseHandlers.values()) {
+    unsubscribeResponse();
+  }
+  apiResponseHandlers.clear();
 }
 

@@ -1,7 +1,7 @@
 import './style.css'
 import OBR from "@owlbear-rodeo/sdk";
 import { setupDiceRoller } from './roller.js';
-import { setupJustDicesApi } from "./api.js";
+import { initializePlayerContext } from "./playerContext.js";
 
 // Function to apply theme based on Owlbear theme
 function applyTheme(theme) {
@@ -97,8 +97,6 @@ OBR.onReady(async () => {
     applyTheme(theme);
   });
 
-  OBR.player.getName().then((playerName) => {
-    setupJustDicesApi();
-    setupDiceRoller(playerName);
-  });
+  const player = await initializePlayerContext();
+  setupDiceRoller(player.name);
 });

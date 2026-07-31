@@ -2,6 +2,7 @@
  * Broadcast manager for handling OBR message communication
  */
 import OBR from "@owlbear-rodeo/sdk";
+import { getPlayerContext } from "./playerContext.js";
 
 const DICE_ROLL_CHANNEL = "com.sewef.justdices/dice-roll";
 
@@ -23,7 +24,7 @@ export async function broadcastLogEntry(sender, text) {
  * @param {Function} onMessage - Callback(event) when message received
  */
 export function registerDiceRollListener(onMessage) {
-  OBR.broadcast.onMessage(DICE_ROLL_CHANNEL, onMessage);
+  return OBR.broadcast.onMessage(DICE_ROLL_CHANNEL, onMessage);
 }
 
 /**
@@ -31,10 +32,6 @@ export function registerDiceRollListener(onMessage) {
  * @returns {Promise<Object>} Sender object with id, name, color, role
  */
 export async function getCurrentSender() {
-  return {
-    id: await OBR.player.getId(),
-    name: await OBR.player.getName(),
-    color: await OBR.player.getColor(),
-    role: await OBR.player.getRole(),
-  };
+  const { id, name, color, role } = await getPlayerContext();
+  return { id, name, color, role };
 }
