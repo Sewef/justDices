@@ -9,6 +9,33 @@ const escapeHTML = str => !str ? "" : str
   .replace(/>/g, "&gt;");
 
 const eventListeners = new Map(); // Track listeners for cleanup
+let discoTimeout = null;
+let discoFadeTimeout = null;
+
+export function stopDisco() {
+  if (discoFadeTimeout !== null) {
+    clearTimeout(discoFadeTimeout);
+    discoFadeTimeout = null;
+  }
+  if (discoTimeout !== null) {
+    clearTimeout(discoTimeout);
+    discoTimeout = null;
+  }
+  document.documentElement.classList.remove("disco-mode", "disco-fade-out");
+}
+
+export function startDisco(durationMs = 8000) {
+  stopDisco();
+  const fadeDurationMs = Math.min(1500, durationMs / 2);
+  const root = document.documentElement;
+  root.style.setProperty("--disco-fade-duration", `${fadeDurationMs}ms`);
+  root.classList.add("disco-mode");
+  discoFadeTimeout = setTimeout(() => {
+    discoFadeTimeout = null;
+    root.classList.add("disco-fade-out");
+  }, durationMs - fadeDurationMs);
+  discoTimeout = setTimeout(stopDisco, durationMs);
+}
 
 /**
  * Display error message with visual feedback
@@ -59,6 +86,22 @@ export function addLogEntry(eventData, onReroll, onReveal) {
         <div class="log-text">
           <span class="log user">${safeSenderName}:</span>
           <span class="log-message">${escapeHTML(text.message)}</span>
+        </div>
+      </div>
+    `;
+    logCards.insertBefore(newEntry, logCards.firstChild);
+    return;
+  }
+
+  if (text.isRickroll) {
+    const safeSenderName = escapeHTML(sender?.name || "Unknown");
+    newEntry.className = "card log-entry-animate disco-message";
+    newEntry.style.borderColor = sender.color;
+    newEntry.innerHTML = `
+      <div class="log-entry">
+        <div class="log-text">
+          <span class="log user">🪩 ${safeSenderName}</span>
+          <span class="log-message">will never give you up, never gonna let you down!</span>
         </div>
       </div>
     `;
@@ -236,6 +279,7 @@ function trackListener(element, eventType, handler) {
  * Clean up all tracked event listeners
  */
 export function cleanupListeners() {
+  stopDisco();
   eventListeners.forEach(listeners => {
     listeners.forEach(({ element, eventType, handler }) => {
       if (element && element.removeEventListener) {

@@ -822,3 +822,138 @@ button:focus-visible {
     right: 0;
     cursor: nwse-resize;
 }
+
+/* ── /rr Easter egg ──────────────────────────── */
+html.disco-mode {
+    animation: disco-hue 0.9s linear infinite;
+    transition: filter var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode body::before {
+    content: "";
+    position: fixed;
+    inset: -60%;
+    z-index: 900;
+    pointer-events: none;
+    opacity: 0.38;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg 18deg,
+        #ff0080 30deg 48deg,
+        transparent 60deg 88deg,
+        #00e5ff 100deg 122deg,
+        transparent 136deg 172deg,
+        #ffe600 184deg 205deg,
+        transparent 220deg 258deg,
+        #8b5cf6 270deg 294deg,
+        transparent 310deg 360deg
+    );
+    mix-blend-mode: screen;
+    animation: disco-spotlights 2.2s linear infinite;
+    transition: opacity var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode body::after {
+    content: "🕺  ✨  🪩  ✨  💃";
+    position: fixed;
+    left: 50%;
+    top: 48%;
+    z-index: 901;
+    pointer-events: none;
+    white-space: nowrap;
+    font-size: clamp(1.4rem, 8vw, 2.8rem);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px #fff);
+    animation: disco-dancers 0.55s ease-in-out infinite alternate;
+    transition: opacity var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode #app {
+    animation: disco-pulse 0.45s ease-in-out infinite alternate;
+    transition: box-shadow var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode button {
+    animation: disco-button 0.35s ease-in-out infinite alternate;
+    transition: transform var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode .card:nth-child(odd) {
+    animation: disco-card-left 0.5s ease-in-out infinite alternate;
+    transition: transform var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode .card:nth-child(even) {
+    animation: disco-card-right 0.5s ease-in-out infinite alternate;
+    transition: transform var(--disco-fade-duration, 1.5s) ease-out;
+}
+
+html.disco-mode.disco-fade-out {
+    animation: none;
+    filter: none;
+}
+
+html.disco-mode.disco-fade-out body::before,
+html.disco-mode.disco-fade-out body::after {
+    opacity: 0;
+}
+
+html.disco-mode.disco-fade-out #app,
+html.disco-mode.disco-fade-out button,
+html.disco-mode.disco-fade-out .card {
+    animation: none;
+    transform: none;
+    box-shadow: none;
+}
+
+@keyframes disco-hue {
+    to { filter: hue-rotate(360deg); }
+}
+
+@keyframes disco-spotlights {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes disco-dancers {
+    from { transform: translate(-50%, -50%) rotate(-5deg) scale(0.92); }
+    to { transform: translate(-50%, -50%) rotate(5deg) scale(1.08); }
+}
+
+@keyframes disco-pulse {
+    from { box-shadow: inset 0 0 12px #ff0080, 0 0 12px #00e5ff; }
+    to { box-shadow: inset 0 0 30px #00e5ff, 0 0 24px #ffe600; }
+}
+
+@keyframes disco-button {
+    from { transform: translateY(-2px) rotate(-3deg); }
+    to { transform: translateY(2px) rotate(3deg); }
+}
+
+@keyframes disco-card-left {
+    from { transform: translateX(-3px) rotate(-0.5deg); }
+    to { transform: translateX(3px) rotate(0.5deg); }
+}
+
+@keyframes disco-card-right {
+    from { transform: translateX(3px) rotate(0.5deg); }
+    to { transform: translateX(-3px) rotate(-0.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.disco-mode,
+    html.disco-mode body::before,
+    html.disco-mode body::after,
+    html.disco-mode #app,
+    html.disco-mode button,
+    html.disco-mode .card {
+        animation: none;
+    }
+
+    html.disco-mode #app {
+        box-shadow: inset 0 0 24px #ff0080, 0 0 18px #00e5ff;
+    }
+}
+
+.disco-message {
+    background: linear-gradient(110deg, #ff008033, #00e5ff33, #ffe60033);
+}

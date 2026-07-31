@@ -45,7 +45,10 @@ OBR.onReady(async () => {
       // opened while visibility was being resolved.
       if (await OBR.action.isOpen()) return;
       await OBR.action.setBadgeBackgroundColor(event.data.sender.color);
-      await OBR.action.setBadgeText(event.data.text.isSay ? "💬" : "🎲");
+      const badge = event.data.text.isSay
+        ? "💬"
+        : event.data.text.isRickroll ? "🪩" : "🎲";
+      await OBR.action.setBadgeText(badge);
     } catch (error) {
       console.error("Unable to update the JustDices badge color:", error);
     }

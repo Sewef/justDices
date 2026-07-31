@@ -9,7 +9,8 @@ import {
   clearInput, 
   setInputValue,
   cleanupListeners,
-  showHelpCard
+  showHelpCard,
+  startDisco
 } from "./uiManager.js";
 import { clearCache } from "./cacheManager.js";
 import { getRollVisibility } from "./rollVisibility.js";
@@ -142,6 +143,9 @@ export function setupDiceRoller(playerName) {
       role
     );
     if (visibility.isVisible) {
+      if (event.data.text.isRickroll) {
+        startDisco();
+      }
       addLogEntry(
         {
           ...event.data,
@@ -184,6 +188,15 @@ export async function submitInput(text, triggerInputError = null) {
     if (inputHistory.length > 50) inputHistory.shift();
   }
   historyIndex = -1;
+
+  if (parsedInput.type === "rickroll") {
+    const sender = await getCurrentSender();
+    await broadcastLogEntry(sender, {
+      isRickroll: true,
+      original: text
+    });
+    return;
+  }
 
   // Handle "help" command
   if (parsedInput.type === "help") {

@@ -60,6 +60,10 @@ const isMathJsMethod = async str => {
 =========================== */
 
 export async function parseInput(text) {
+    if (/^\/(rr|rickroll)$/i.test(text.trim())) {
+        return { type: "rickroll" };
+    }
+
     // Help command
     if (text.trim().toLowerCase() === "/help") {
         return { type: "help" };
