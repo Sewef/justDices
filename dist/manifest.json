@@ -1,12 +1,12 @@
 {
     "name": "JustDices",
-    "version": "1.0.34",
+    "version": "1.1",
     "description" : "A Roll20-like dice roller for Owlbear Rodeo",
     "manifest_version": 1,
     "author": "Sewef",
     "homepage_url": "https://github.com/Sewef/justDices/",
     "background_url": "/background.html",
-    "icon": "https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDices.png",
+    "icon": "https://justdices.onrender.com/JustDices.png",
     "action": {
       "title": "JustDices",
       "icon": "/icon.svg",

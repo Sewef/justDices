@@ -6,7 +6,7 @@
     "author": "Sewef",
     "homepage_url": "https://github.com/Sewef/justDices/",
     "background_url": "/background.html",
-    "icon": "https://raw.githubusercontent.com/Sewef/justDices/refs/heads/main/docs/JustDices.png",
+    "icon": "https://justdices.onrender.com/JustDices.png",
     "action": {
       "title": "JustDices",
       "icon": "/icon.svg",
