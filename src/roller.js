@@ -12,6 +12,7 @@ import {
   showHelpCard
 } from "./uiManager.js";
 import { clearCache } from "./cacheManager.js";
+import { getRollVisibility } from "./rollVisibility.js";
 
 const minPanelWidth = 350;
 const minPanelHeight = 200;
@@ -134,17 +135,18 @@ export function setupDiceRoller(playerName) {
       OBR.player.getId(),
       OBR.player.getRole()
     ]);
-    const isGM = role === "GM";
-    const isRoller = event.data.sender.id === currentPlayerId;
-    const isHidden = event.data.text.hidden;
-    const isLiar = event.data.text.liar;
-    const isBlind = event.data.text.blind;
-    if (!isHidden || isRoller || isGM) {
+    const visibility = getRollVisibility(
+      event.data.text,
+      event.data.sender.id,
+      currentPlayerId,
+      role
+    );
+    if (visibility.isVisible) {
       addLogEntry(
         {
           ...event.data,
-          canViewResult: (!isLiar && !isBlind) || (isLiar && isRoller) || (isBlind && isGM),
-          canReveal: (isHidden || isLiar || isBlind) && (isRoller || isGM)
+          canViewResult: visibility.canViewResult,
+          canReveal: visibility.canReveal
         },
         submitInput,
         async (roll) => {
