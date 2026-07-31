@@ -12,11 +12,17 @@ OBR.onReady(async () => {
   await initializePlayerContext();
   setupJustDicesApi();
 
+  const [initialBadgeColor, initialBadgeText] = await Promise.all([
+    OBR.action.getBadgeBackgroundColor(),
+    OBR.action.getBadgeText()
+  ]);
+
   const restoreBadge = async () => {
-    await Promise.all([
-      OBR.action.setBadgeBackgroundColor(),
-      OBR.action.setBadgeText()
-    ]);
+    const updates = [OBR.action.setBadgeText(initialBadgeText)];
+    if (initialBadgeColor !== undefined) {
+      updates.push(OBR.action.setBadgeBackgroundColor(initialBadgeColor));
+    }
+    await Promise.all(updates);
   };
 
   const unsubscribeOpenChange = OBR.action.onOpenChange((isOpen) => {
