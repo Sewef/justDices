@@ -1,7 +1,7 @@
 {
   "name": "justdices",
   "private": true,
-  "version": "1.0.34",
+  "version": "1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
