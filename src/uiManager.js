@@ -12,6 +12,10 @@ const eventListeners = new Map(); // Track listeners for cleanup
 let discoTimeout = null;
 let discoFadeTimeout = null;
 
+const clearOneShotAnimationClass = (element, className, durationMs) => {
+  setTimeout(() => element.classList.remove(className), durationMs);
+};
+
 export function stopDisco() {
   if (discoFadeTimeout !== null) {
     clearTimeout(discoFadeTimeout);
@@ -90,6 +94,7 @@ export function addLogEntry(eventData, onReroll, onReveal) {
       </div>
     `;
     logCards.insertBefore(newEntry, logCards.firstChild);
+    clearOneShotAnimationClass(newEntry, "log-entry-animate", 500);
     return;
   }
 
@@ -106,15 +111,18 @@ export function addLogEntry(eventData, onReroll, onReveal) {
       </div>
     `;
     logCards.insertBefore(newEntry, logCards.firstChild);
+    clearOneShotAnimationClass(newEntry, "log-entry-animate", 500);
     return;
   }
 
   // Handle roll entry
   const restrictedDetailsAreHidden = (text.liar || text.blind) && !eventData.canViewResult;
   const isConcealed = text.hidden || restrictedDetailsAreHidden;
-  const criticalClass = (!isConcealed && text.allDiceMax ? " critical-flex" : "")
-    + (!isConcealed && text.allDiceMin ? " critical-failure" : "");
-  newEntry.className = "card log-entry-animate" + criticalClass;
+  const shouldAnimateCritical = !isConcealed && !text.revealedFrom;
+  const criticalClass = (shouldAnimateCritical && text.allDiceMax ? " critical-flex" : "")
+    + (shouldAnimateCritical && text.allDiceMin ? " critical-failure" : "");
+  const entryAnimationClass = text.revealedFrom ? "roll-reveal-animate" : "log-entry-animate";
+  newEntry.className = `card ${entryAnimationClass}${criticalClass}`;
   if (!isConcealed && text.allDiceMax) newEntry.classList.add('critical-flex-glow');
   if (!isConcealed && text.allDiceMin) newEntry.classList.add('critical-failure-glow');
 
@@ -167,13 +175,18 @@ export function addLogEntry(eventData, onReroll, onReveal) {
 
   logCards.insertBefore(newEntry, logCards.firstChild);
 
+  // Animation classes must not survive their first run. The disco animation
+  // temporarily overrides card animations; leaving these classes in place
+  // would make their animations start again when /rr ends.
+  clearOneShotAnimationClass(newEntry, entryAnimationClass, text.revealedFrom ? 700 : 500);
+
   // After the failure animation ends, remove the class so the card's
   // border-color transitions back to the player's color (inline style).
-  if (!isConcealed && text.allDiceMax) {
-    setTimeout(() => newEntry.classList.remove('critical-flex-glow'), 800);
+  if (shouldAnimateCritical && text.allDiceMax) {
+    setTimeout(() => newEntry.classList.remove('critical-flex', 'critical-flex-glow'), 800);
   }
-  if (!isConcealed && text.allDiceMin) {
-    setTimeout(() => newEntry.classList.remove('critical-failure-glow'), 800);
+  if (shouldAnimateCritical && text.allDiceMin) {
+    setTimeout(() => newEntry.classList.remove('critical-failure', 'critical-failure-glow'), 800);
   }
 
   // Setup expand/collapse for long results
@@ -339,4 +352,5 @@ export function showHelpCard() {
   `;
 
   logCards.insertBefore(card, logCards.firstChild);
+  clearOneShotAnimationClass(card, "log-entry-animate", 500);
 }

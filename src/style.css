@@ -439,7 +439,6 @@ h3 {
 
 .log-entry {
     position: relative;
-    animation: fadeInSlideDown 0.5s ease forwards;
 }
 
 @keyframes fadeInSlideDown {
@@ -456,6 +455,31 @@ h3 {
 
 .log-entry-animate {
     animation: fadeInSlideDown 0.2s ease forwards;
+}
+
+@keyframes rollReveal {
+    0% {
+        opacity: 0.35;
+        transform: perspective(500px) rotateX(-12deg) scale(0.94);
+        filter: blur(5px) brightness(1.8);
+    }
+
+    55% {
+        opacity: 1;
+        transform: perspective(500px) rotateX(3deg) scale(1.025);
+        filter: blur(0) brightness(1.25);
+    }
+
+    100% {
+        opacity: 1;
+        transform: perspective(500px) rotateX(0) scale(1);
+        filter: blur(0) brightness(1);
+    }
+}
+
+.roll-reveal-animate {
+    animation: rollReveal 0.55s cubic-bezier(0.2, 0.85, 0.3, 1) both !important;
+    transform-origin: center top;
 }
 
 @keyframes card-impact {
@@ -951,6 +975,13 @@ html.disco-mode.disco-fade-out .card {
 
     html.disco-mode #app {
         box-shadow: inset 0 0 24px #ff0080, 0 0 18px #00e5ff;
+    }
+
+    .log-entry-animate,
+    .roll-reveal-animate,
+    .critical-flex,
+    .critical-failure {
+        animation: none !important;
     }
 }
 
