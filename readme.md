@@ -37,9 +37,27 @@ It allows quick, flexible dice rolls with support for formulas, hidden rolls, Po
   - Other extensions can call `JustDices` via `OBR.broadcast`  
   - Example:  
     ```js
-    justdices.api.roll(callId, expression, showInLogs);
+    const callId = crypto.randomUUID();
+
+    OBR.broadcast.sendMessage("com.sewef.justdices/api.request", {
+      callId,
+      expression: "/r 4d6k3",
+      showInLogs: false
+    }, { destination: "LOCAL" });
+
+    const unsub = OBR.broadcast.onMessage(
+      "com.sewef.justdices/api.response",
+      (evt) => {
+        const res = evt.data;
+        if (res.callId !== callId) return;
+        unsub(); // unsubscribe after receiving our response
+
+        if (res.ok) {
+          console.log(`Rolled: ${res.expressionOut} = ${res.data.total}`);
+        }
+      }
+    );
     ```
-    Returns results via `justdices.api.response` with detailed roll data  
 
 ---
 

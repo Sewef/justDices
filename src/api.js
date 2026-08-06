@@ -18,12 +18,12 @@ export function setupJustDicesApi() {
 
   apiRequestUnsubscribe = OBR.broadcast.onMessage(API_CHANNEL_REQUEST, async (evt) => {
     const req = evt.data;
-    if (!req?.callId || !req?.requesterId) {
+    if (!req?.callId) {
       console.warn("[API] Invalid request payload", req);
       return;
     }
 
-    const base = { callId: req.callId, requesterId: req.requesterId, expressionIn: req.expression };
+    const base = { callId: req.callId, expressionIn: req.expression };
 
     try {
       // Check if expression already has a command prefix
@@ -74,7 +74,7 @@ export function setupJustDicesApi() {
 
 // --- Client ---
 export async function apiRoll(callId, expression, showInLogs = true, timeoutMs = 5000) {
-  const requesterId = await getSelfId();
+  // const requesterId = await getSelfId();
 
   return new Promise((resolve, reject) => {
     // Ensure we do not keep stale listeners for duplicate callIds.
@@ -106,7 +106,7 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
 
     const handler = (evt) => {
       const res = evt.data;
-      if (!res || res.callId !== callId || res.requesterId !== requesterId) return;
+      if (!res || res.callId !== callId) return;
       
       cleanup();
       resolve(res);
@@ -116,7 +116,7 @@ export async function apiRoll(callId, expression, showInLogs = true, timeoutMs =
     apiResponseHandlers.set(callId, unsubscribeResponse);
     // Only the requester's JustDices instance must execute the roll. Sending to
     // every connection would create one roll per player, each owned by that player.
-    OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs, requesterId }, { destination: "LOCAL" });
+    OBR.broadcast.sendMessage(API_CHANNEL_REQUEST, { callId, expression, showInLogs }, { destination: "LOCAL" });
   });
 }
 

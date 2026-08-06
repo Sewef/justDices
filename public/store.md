@@ -140,7 +140,7 @@ OBR.broadcast.sendMessage("com.sewef.justdices/api.request", {
 - `showInLogs` (*optional, default true)* → Whether to also print in the JustDices log.
 
 ### Response
-Listen on the response channel and filter by your `callId` & `requesterId`.
+Listen on the response channel and filter by your `callId`.
 ```JS
 OBR.broadcast.onMessage("com.sewef.justdices/api.response", (evt) => {
   const res = evt.data;
